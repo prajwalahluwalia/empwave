@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Brain — Cognitive Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#05061a;
+    --bg-1:#0c0f2e;
+    --bg-2:#160a3a;
+    --line-dim: rgba(120,160,255,0.18);
+    --line-bright:#7fe6ff;
+    --accent-cyan:#5be9ff;
+    --accent-violet:#9a7bff;
+    --accent-magenta:#ff6ec7;
+    --ink-hi:#eef1ff;
+    --ink-mid:#9aa3d1;
+    --ink-dim:#5c6294;
+    --panel: rgba(14,16,45,0.72);
+    --panel-border: rgba(140,170,255,0.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%; width:100%;
+    background:
+      radial-gradient(ellipse 120% 80% at 50% -10%, #23134f 0%, transparent 55%),
+      radial-gradient(ellipse 100% 60% at 85% 100%, #0e2a4d 0%, transparent 50%),
+      linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 45%, var(--bg-2) 100%);
+    font-family:'Space Grotesk', sans-serif;
+    color:var(--ink-hi);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  #stage{ position:fixed; inset:0; }
+  canvas{ display:block; touch-action:none; cursor:grab; }
+  canvas:active{ cursor:grabbing; }
+
+  /* ---- top chrome ---- */
+  .eyebrow{
+    position:fixed; top:28px; left:32px; z-index:5;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px; letter-spacing:.22em; color:#fff;
+    opacity:.85; text-transform:uppercase;
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow .dot{
+    width:6px;height:6px;border-radius:50%;background:var(--accent-cyan);
+    box-shadow:0 0 8px var(--accent-cyan), 0 0 16px var(--accent-cyan);
+    animation:blink 2.4s ease-in-out infinite;
+  }
+  @keyframes blink{ 0%,100%{opacity:1} 50%{opacity:.25} }
+
+  .title-block{
+    position:fixed; top:52px; left:32px; z-index:5; pointer-events:none;
+  }
+  .title-block h1{
+    margin:0; font-weight:700; font-size:clamp(28px,4vw,44px); line-height:1.02;
+    letter-spacing:-0.01em;
+    background:linear-gradient(120deg,#ffffff 10%, #b9c3ff 55%, var(--accent-cyan) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .title-block p{
+    margin:10px 0 0; font-family:'IBM Plex Mono', monospace; font-size:14.5px;
+    color:#fff; opacity:.82; max-width:390px; line-height:1.55; letter-spacing:.01em;
+  }
+
+  /* ---- region readout, top right ---- */
+  #readout{
+    position:fixed; top:28px; right:32px; z-index:5;
+    width:320px; font-family:'IBM Plex Mono', monospace;
+  }
+  #readout .rh{
+    font-size:14px; letter-spacing:.16em; color:#fff; opacity:.82; text-transform:uppercase;
+    margin-bottom:10px; display:flex; justify-content:space-between;
+  }
+  #readout .rh span.n{ color:var(--accent-violet); }
+  .region-row{
+    display:flex; align-items:center; gap:9px; padding:6px 0;
+    font-size:15px; color:#fff; opacity:.68; border-top:1px solid rgba(140,170,255,0.08);
+    transition:color .3s ease;
+  }
+  .region-row:first-of-type{ border-top:none; }
+  .region-row .bar{
+    width:34px; height:3px; border-radius:2px; background:rgba(140,170,255,0.15); overflow:hidden; flex-shrink:0;
+  }
+  .region-row .bar i{ display:block; height:100%; width:0%; background:var(--accent-cyan); transition:width .6s ease; }
+  .region-row.active{ color:#fff; opacity:1; }
+  .region-row.active .bar i{
+    background:var(--region-color);
+    box-shadow:0 0 8px var(--region-color);
+  }
+
+  /* ---- floating labels tied to 3d markers ---- */
+  .tag{
+    position:fixed; z-index:4; transform:translate(-50%,-130%);
+    pointer-events:none; opacity:0; transition:opacity .4s ease;
+    display: none; /* HIDDEN - removed circles and stems */
+  }
+  .tag.show{ opacity:1; }
+  .tag .box{
+    background:rgba(9,10,28,0.82); border:1px solid rgba(140,200,255,0.35);
+    backdrop-filter:blur(6px); padding:6px 10px; border-radius:6px;
+    white-space:nowrap; box-shadow:0 4px 24px rgba(0,0,0,0.4);
+  }
+  .tag .box .nm{ font-size:11px; color:var(--accent-cyan); font-weight:500; letter-spacing:.03em;}
+  .tag .box .fn{ font-size:9.5px; color:var(--ink-mid); margin-top:2px; }
+  .tag .stem{ width:1px; height:16px; background:linear-gradient(180deg, rgba(140,200,255,.5), transparent); margin:0 auto; }
+
+  /* ---- bottom console ---- */
+  #console{
+    position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:6;
+    width:min(760px, 90vw);
+  }
+  #status-line{
+    font-family:'IBM Plex Mono', monospace; font-size:14.5px; color:#fff; opacity:.78;
+    text-align:center; margin-bottom:10px; min-height:14px; letter-spacing:.03em;
+    transition:color .3s ease;
+  }
+  #status-line.live{ color:#fff; opacity:1; }
+
+  #explainPanel{
+    position:fixed; right:32px; top:350px; width:320px;
+    max-height:0; overflow:hidden; opacity:0;
+    transition:max-height .4s ease, opacity .35s ease;
+  }
+  #explainPanel.show{ max-height:400px; opacity:1; overflow-y:auto; }
+  #explainPanel::-webkit-scrollbar{ width:4px; }
+  #explainPanel::-webkit-scrollbar-track{ background:rgba(140,170,255,0.08); border-radius:2px; }
+  #explainPanel::-webkit-scrollbar-thumb{ background:var(--accent-cyan); border-radius:2px; }
+  .explain-card{
+    display:flex; gap:10px; align-items:flex-start;
+    background:rgba(10,12,32,0.65); border:1px solid rgba(140,170,255,0.14);
+    border-left:3px solid var(--accent-cyan);
+    border-radius:10px; padding:10px 12px; margin-bottom:7px;
+    backdrop-filter:blur(10px);
+  }
+  .explain-card .dot{ width:8px;height:8px;border-radius:50%; margin-top:5px; flex-shrink:0; }
+  .explain-card .body{ font-family:'IBM Plex Mono', monospace; }
+  .explain-card .nm{ font-size:15px; color:#fff; font-weight:500; }
+  .explain-card .fn{ font-size:13.5px; color:#fff; opacity:.86; margin-top:2px; }
+  .explain-card .why{ font-size:14px; color:#fff; opacity:.76; margin-top:6px; line-height:1.55; }
+  .explain-card .why b{ color:var(--ink-hi); font-weight:500; }
+
+  .console-panel{
+    display:flex; align-items:center; gap:10px;
+    background:var(--panel); border:1px solid var(--panel-border);
+    border-radius:16px; padding:8px 8px 8px 20px;
+    backdrop-filter:blur(14px);
+    box-shadow:0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .console-panel input{
+    flex:1; background:transparent; border:none; outline:none;
+    color:#fff; font-family:'Space Grotesk',sans-serif; font-size:18px;
+    padding:10px 0;
+  }
+  .console-panel input::placeholder{ color:#fff; opacity:.62; }
+  #simBtn{
+    flex-shrink:0; border:none; cursor:pointer;
+    background:linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+    color:#0a0b1f; font-family:'IBM Plex Mono', monospace; font-weight:500;
+    font-size:15px; letter-spacing:.08em; text-transform:uppercase;
+    padding:13px 22px; border-radius:11px;
+    display:flex; align-items:center; gap:8px;
+    transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    box-shadow:0 6px 20px rgba(91,233,255,0.25);
+  }
+  #simBtn:hover{ transform:translateY(-1px); filter:brightness(1.08); box-shadow:0 8px 26px rgba(91,233,255,0.4); }
+  #simBtn:active{ transform:translateY(0px) scale(.98); }
+  #simBtn:disabled{ cursor:wait; opacity:.62; transform:none; filter:saturate(.7); }
+  #simBtn svg{ width:14px; height:14px; }
+  .hint{
+    text-align:center; margin-top:12px; font-family:'IBM Plex Mono', monospace;
+    font-size:13.5px; color:#fff; letter-spacing:.035em; opacity:.68;
+  }
+
+  #legendToggle{
+    position:fixed; bottom:26px; left:32px; z-index:5;
+    font-family:'IBM Plex Mono', monospace; font-size:14px; letter-spacing:.08em;
+    color:#fff; background:transparent; border:1px solid var(--panel-border);
+    padding:9px 12px; border-radius:9px; cursor:pointer; text-transform:uppercase;
+    transition:color .2s, border-color .2s;
+  }
+  #legendToggle:hover{ color:var(--accent-cyan); border-color:rgba(91,233,255,0.4); }
+
+  #intentInspector{
+    --intent-color:var(--accent-cyan);
+    position:fixed; right:32px; bottom:28px; z-index:7;
+    width:310px;
+    padding:15px 16px;
+    background:
+      radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--intent-color) 14%,transparent),transparent 42%),
+      rgba(9,11,32,.84);
+    border:1px solid rgba(140,170,255,.18);
+    border-left:3px solid var(--intent-color);
+    border-radius:14px;
+    backdrop-filter:blur(14px);
+    box-shadow:0 18px 55px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);
+    font-family:'IBM Plex Mono',monospace;
+    transition:border-color .25s ease,background .25s ease;
+  }
+  .intent-inspector-head{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px;
+  }
+  .intent-inspector-label{
+    font-size:10.5px; letter-spacing:.18em;
+    color:#fff; opacity:.68; text-transform:uppercase;
+  }
+  #nlpState{
+    display:flex; align-items:center; gap:6px;
+    font-size:9.5px; letter-spacing:.1em;
+    color:var(--intent-color); text-transform:uppercase;
+  }
+  #nlpState::before{
+    content:''; width:5px; height:5px; border-radius:50%;
+    background:var(--intent-color);
+    box-shadow:0 0 9px var(--intent-color);
+  }
+  #intentInspector.processing #nlpState::before{ animation:blink .8s ease-in-out infinite; }
+  #nlpPrimary{
+    margin-top:10px; color:#fff;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:18px; font-weight:600; line-height:1.2;
+  }
+  #nlpMeta{
+    margin-top:4px; font-size:10.5px; line-height:1.45;
+    color:var(--intent-color);
+  }
+  #nlpReason{
+    margin-top:8px; font-size:10.5px; line-height:1.5;
+    color:#fff; opacity:.7;
+  }
+  #nlpEvidence{
+    margin-top:7px; padding:7px 8px;
+    border:1px solid rgba(140,170,255,.1);
+    border-radius:8px; background:rgba(140,170,255,.04);
+    color:#fff; opacity:.82; font-size:10.5px; line-height:1.4;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  #nlpSignals{
+    display:flex; flex-wrap:wrap; gap:5px;
+    margin-top:9px;
+  }
+  .nlp-layer-title{
+    flex:0 0 100%;
+    margin-top:3px;
+    color:#fff; opacity:.42;
+    font-size:8px; letter-spacing:.13em;
+    text-transform:uppercase;
+  }
+  .nlp-signal{
+    display:flex; align-items:center; gap:5px;
+    padding:4px 6px; border-radius:6px;
+    background:rgba(140,170,255,.05);
+    border:1px solid rgba(140,170,255,.1);
+    color:#fff; opacity:.82; font-size:9px;
+  }
+  .nlp-signal::before{
+    content:''; width:5px; height:5px; border-radius:50%;
+    background:var(--signal-color);
+    box-shadow:0 0 6px var(--signal-color);
+  }
+  #nlpModel{
+    margin-top:9px; font-size:8.5px; letter-spacing:.06em;
+    color:#fff; opacity:.38;
+  }
+
+  #legendModal{
+    position:fixed; inset:0; z-index:30;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+    background:rgba(3,4,18,0.7);
+    backdrop-filter:blur(12px);
+    opacity:0; visibility:hidden; pointer-events:none;
+    transition:opacity .25s ease, visibility .25s ease;
+  }
+  #legendModal.open{
+    opacity:1; visibility:visible; pointer-events:auto;
+  }
+  .legend-panel{
+    position:relative;
+    width:min(820px,calc(100vw - 48px));
+    max-height:min(720px,calc(100vh - 48px));
+    overflow:hidden;
+    background:
+      radial-gradient(circle at 100% 0%,rgba(91,233,255,.1),transparent 38%),
+      radial-gradient(circle at 0% 100%,rgba(154,123,255,.12),transparent 42%),
+      rgba(10,12,34,.92);
+    border:1px solid rgba(140,170,255,.22);
+    border-radius:18px;
+    box-shadow:0 28px 90px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.05);
+    transform:translateY(12px) scale(.98);
+    transition:transform .25s ease;
+  }
+  #legendModal.open .legend-panel{ transform:translateY(0) scale(1); }
+  .legend-head{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    padding:24px 24px 18px;
+    border-bottom:1px solid rgba(140,170,255,.12);
+  }
+  .legend-kicker{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; letter-spacing:.18em;
+    color:var(--accent-cyan); text-transform:uppercase;
+  }
+  .legend-head h2{
+    margin:8px 0 0; font-size:29px; letter-spacing:-.01em;
+    background:linear-gradient(110deg,#fff,#b9c3ff 60%,var(--accent-cyan));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  #legendClose{
+    width:40px; height:40px; border-radius:10px;
+    border:1px solid var(--panel-border); background:rgba(140,170,255,.05);
+    color:var(--ink-mid); cursor:pointer; font-size:20px; line-height:1;
+    transition:color .2s,border-color .2s,background .2s;
+  }
+  #legendClose:hover{
+    color:var(--accent-cyan); border-color:rgba(91,233,255,.45);
+    background:rgba(91,233,255,.08);
+  }
+  #legendGrid{
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:9px; padding:20px 24px 24px;
+    overflow-y:auto; max-height:calc(100vh - 190px);
+  }
+  #legendGrid::-webkit-scrollbar{ width:4px; }
+  #legendGrid::-webkit-scrollbar-thumb{ background:var(--accent-cyan); border-radius:4px; }
+  .legend-item{
+    display:grid; grid-template-columns:42px minmax(0,1fr);
+    gap:14px; align-items:center;
+    padding:15px 16px;
+    background:rgba(140,170,255,.035);
+    border:1px solid rgba(140,170,255,.1);
+    border-radius:11px;
+  }
+  .legend-signal{
+    position:relative; height:2px; border-radius:2px;
+    background:var(--region-color);
+    box-shadow:0 0 9px var(--region-color);
+  }
+  .legend-signal::before{
+    content:''; position:absolute; width:6px; height:6px; border-radius:50%;
+    top:50%; right:0; transform:translateY(-50%);
+    background:var(--region-color);
+    box-shadow:0 0 10px var(--region-color);
+  }
+  .legend-name{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:16px; color:var(--ink-hi);
+  }
+  .legend-function{
+    margin-top:5px; font-family:'IBM Plex Mono',monospace;
+    font-size:14px; line-height:1.5; color:var(--ink-mid);
+  }
+
+  @media (max-width: 720px){
+    #intentInspector{ bottom:140px; }
+  }
+  @media (max-width: 720px){
+    #readout{ display:none; }
+    .title-block p{ max-width:220px; }
+    #legendGrid{ grid-template-columns:1fr; }
+    #intentInspector{
+      left:16px; right:16px; bottom:142px; width:auto;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage"></div>
+
+<div class="eyebrow"><span class="dot"></span>NEURAL WIREFRAME · LIVE MODEL</div>
+<div class="title-block">
+  <h1>DIGITAL&nbsp;BRAIN</h1>
+  <p>Drag to rotate the model. Type a sentence below to detect its emotions and intent, then watch their combined region mapping.</p>
+</div>
+
+<div id="readout">
+  <div class="rh">REGION ACTIVITY <span class="n" id="activeCount">0/10</span></div>
+  <div id="regionList"></div>
+</div>
+
+<div id="tagLayer"></div>
+
+<button id="legendToggle">? Legend</button>
+
+<aside id="intentInspector" aria-live="polite">
+  <div class="intent-inspector-head">
+    <div class="intent-inspector-label">NLP interpretation</div>
+    <div id="nlpState">Ready</div>
+  </div>
+  <div id="nlpPrimary">Awaiting analysis</div>
+  <div id="nlpMeta">Submit a sentence to inspect its emotions and intent.</div>
+  <div id="nlpReason">The local models will show how their evidence maps to each region.</div>
+  <div id="nlpEvidence">No evidence clause yet</div>
+  <div id="nlpSignals"></div>
+  <div id="nlpModel">MODEL · ALL-MINILM-L6-V2</div>
+</aside>
+
+<div id="legendModal" role="dialog" aria-modal="true" aria-labelledby="legendTitle" aria-hidden="true">
+  <section class="legend-panel">
+    <header class="legend-head">
+      <div>
+        <div class="legend-kicker">Neural map · 10 regions</div>
+        <h2 id="legendTitle">Brain Region Legend</h2>
+      </div>
+      <button id="legendClose" type="button" aria-label="Close legend">&times;</button>
+    </header>
+    <div id="legendGrid"></div>
+  </section>
+</div>
+
+<div id="console">
+  <div id="status-line">Awaiting input — describe a thought, action, or sensation</div>
+  <div id="explainPanel"></div>
+  <div class="console-panel">
+    <input id="intentInput" type="text" maxlength="140" placeholder="e.g. &quot;I heard my favorite song and started dancing&quot;" />
+    <button id="simBtn">
+      Simulate
+      <svg viewBox="0 0 24 24" fill="none"><path d="M5 3l16 9-16 9V3z" fill="currentColor"/></svg>
+    </button>
+  </div>
+  <div class="hint">TRY: "I'm scared of the dark" · "solve this math problem" · "I can't stop dancing to this beat"</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+
+// ============================================================
+// REGION DEFINITIONS
+// ============================================================
+const REGIONS = [
+  { id:'prefrontal', label:'Prefrontal Cortex', fn:'Decision-making & reasoning',
+    pos:[0.0, 0.30, 0.80] },
+  { id:'broca', label:"Broca's Area", fn:'Speech & language production',
+    pos:[-0.34, 0.16, 0.66] },
+  { id:'motor', label:'Motor Cortex', fn:'Voluntary movement control',
+    pos:[0.0, 0.55, 0.12] },
+  { id:'parietal', label:'Parietal Lobe', fn:'Spatial awareness & touch',
+    pos:[0.0, 0.44, -0.32] },
+  { id:'occipital', label:'Occipital Lobe', fn:'Visual processing',
+    pos:[0.0, 0.06, -0.90] },
+  { id:'temporal_l', label:'Temporal Lobe (L)', fn:'Auditory processing',
+    pos:[-0.56, -0.04, 0.22] },
+  { id:'temporal_r', label:'Temporal Lobe (R)', fn:'Memory & recognition',
+    pos:[0.56, -0.04, 0.22] },
+  { id:'amygdala', label:'Amygdala', fn:'Emotion & fear response',
+    pos:[0.0, -0.06, 0.34] },
+  { id:'cerebellum', label:'Cerebellum', fn:'Balance & coordination',
+    pos:[0.0, -0.25, -0.82] },
+  { id:'brainstem', label:'Brainstem', fn:'Autonomic regulation',
+    pos:[0.0, -0.27, -0.22] },
+];
+
+// ============================================================
+// SCENE SETUP
+// ============================================================
+const stage = document.getElementById('stage');
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, window.innerWidth/window.innerHeight, 0.1, 100);
+camera.position.set(0, 0.32, 4.7);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+stage.appendChild(renderer.domElement);
+
+window.addEventListener('resize', ()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// subtle ambient particle field (depth cue)
+(function starfield(){
+  const n = 260;
+  const g = new THREE.BufferGeometry();
+  const pos = new Float32Array(n*3);
+  for(let i=0;i<n;i++){
+    const r = 6 + Math.random()*10;
+    const theta = Math.random()*Math.PI*2;
+    const phi = Math.acos((Math.random()*2)-1);
+    pos[i*3]   = r*Math.sin(phi)*Math.cos(theta);
+    pos[i*3+1] = r*Math.sin(phi)*Math.sin(theta);
+    pos[i*3+2] = r*Math.cos(phi) - 2;
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const m = new THREE.PointsMaterial({ color:0x6f7bd6, size:0.02, transparent:true, opacity:0.5 });
+  scene.add(new THREE.Points(g,m));
+})();
+
+// ============================================================
+// BRAIN GROUP
+// ============================================================
+const brainHoverGroup = new THREE.Group();
+scene.add(brainHoverGroup);
+const brainGroup = new THREE.Group();
+brainHoverGroup.add(brainGroup);
+let brainInteractionMesh = null;
+
+function parseBrainOBJ(source){
+  const vertices = [];
+  const faces = [];
+
+  source.split(/\r?\n/).forEach(line=>{
+    const parts = line.trim().split(/\s+/);
+    if(parts[0]==='v' && parts.length>=4){
+      vertices.push([Number(parts[1]), Number(parts[2]), Number(parts[3])]);
+    } else if(parts[0]==='f' && parts.length>=4){
+      const polygon = parts.slice(1).map(token=>{
+        const value = Number(token.split('/')[0]);
+        return value<0 ? vertices.length+value : value-1;
+      });
+      for(let i=1;i<polygon.length-1;i++){
+        faces.push(polygon[0],polygon[i],polygon[i+1]);
+      }
+    }
+  });
+
+  if(!vertices.length || !faces.length){
+    throw new Error('The anatomical brain model contains no usable geometry.');
+  }
+
+  const min = [Infinity,Infinity,Infinity];
+  const max = [-Infinity,-Infinity,-Infinity];
+  vertices.forEach(vertex=>{
+    for(let axis=0;axis<3;axis++){
+      min[axis]=Math.min(min[axis],vertex[axis]);
+      max[axis]=Math.max(max[axis],vertex[axis]);
+    }
+  });
+  const center = min.map((value,axis)=>(value+max[axis])/2);
+  const dimensions = min.map((value,axis)=>max[axis]-value);
+  const positions = new Float32Array(vertices.length*3);
+
+  vertices.forEach((vertex,index)=>{
+    // Medical OBJ axes: X left/right, Y front/back, Z inferior/superior.
+    positions[index*3]   = ((vertex[0]-center[0])/dimensions[0])*1.56;
+    positions[index*3+1] = ((vertex[2]-center[2])/dimensions[2])*1.48;
+    positions[index*3+2] = ((vertex[1]-center[1])/dimensions[1])*1.92;
+  });
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  geometry.setIndex(faces);
+  geometry.computeVertexNormals();
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
+const idleBrainMaterials=[];
+function registerIdleMaterial(material,idleOpacity,activeOpacity){
+  material.opacity=idleOpacity;
+  idleBrainMaterials.push({material,idleOpacity,activeOpacity});
+}
+
+function makeWirePart(geo){
+  const wf = new THREE.WireframeGeometry(geo);
+  const source = wf.attributes.position;
+  const positions = [];
+  const colors = [];
+  const cyan = new THREE.Color(0x56ddff);
+  const violet = new THREE.Color(0x8d67ff);
+  const color = new THREE.Color();
+
+  // Keep a deterministic subset of the triangulation so the idle mesh breathes.
+  for(let i=0;i<source.count;i+=2){
+    const ax=source.getX(i), ay=source.getY(i), az=source.getZ(i);
+    const bx=source.getX(i+1), by=source.getY(i+1), bz=source.getZ(i+1);
+    const hash = Math.abs(Math.sin(
+      (ax+bx)*61.7 + (ay+by)*117.3 + (az+bz)*43.1
+    )*43758.5453)%1;
+    if(hash<0.4) continue;
+
+    positions.push(ax,ay,az,bx,by,bz);
+    [ay,by].forEach(y=>{
+      const blend = Math.max(0,Math.min(1,(y+0.75)/1.5));
+      color.copy(violet).lerp(cyan,blend);
+      colors.push(color.r,color.g,color.b);
+    });
+  }
+
+  const sparseGeometry = new THREE.BufferGeometry();
+  sparseGeometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  sparseGeometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  const material = new THREE.LineBasicMaterial({
+    vertexColors:true,
+    transparent:true,
+    opacity:0.3,
+    depthWrite:false,
+    blending:THREE.AdditiveBlending
+  });
+  registerIdleMaterial(material,0.3,0.1);
+  return {
+    line:new THREE.LineSegments(sparseGeometry,material),
+    fullEdgePositions:source.array.slice()
+  };
+}
+
+function addNeuralNodes(geometry){
+  const src = geometry.attributes.position;
+  const step = Math.max(1,Math.ceil(src.count/1200));
+  const pts = [], colors = [];
+  const cyan = new THREE.Color(0x76efff);
+  const violet = new THREE.Color(0xa879ff);
+  const color = new THREE.Color();
+  for(let i=0;i<src.count;i+=step){
+    const x=src.getX(i), y=src.getY(i), z=src.getZ(i);
+    pts.push(x,y,z);
+    color.copy(violet).lerp(cyan,Math.max(0,Math.min(1,(y+0.75)/1.5)));
+    colors.push(color.r,color.g,color.b);
+  }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts),3));
+  g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors),3));
+  const texture = makeGlowTexture('#ffffff');
+  const haloMaterial = new THREE.PointsMaterial({
+    size:0.062,
+    map:texture,
+    vertexColors:true,
+    transparent:true,
+    opacity:0.62,
+    depthWrite:false,
+    blending:THREE.AdditiveBlending
+  });
+  const coreMaterial = new THREE.PointsMaterial({
+    size:0.018,
+    map:texture,
+    vertexColors:true,
+    transparent:true,
+    opacity:0.88,
+    depthWrite:false,
+    blending:THREE.AdditiveBlending
+  });
+  registerIdleMaterial(haloMaterial,0.62,0.22);
+  registerIdleMaterial(coreMaterial,0.88,0.36);
+  brainGroup.add(new THREE.Points(g,haloMaterial));
+  brainGroup.add(new THREE.Points(g,coreMaterial));
+}
+
+function addAnatomicalBrain(geometry){
+  const wire = makeWirePart(geometry);
+  brainGroup.add(wire.line);
+  addNeuralNodes(geometry);
+  attachRegionSurfaceEffects(geometry,wire.fullEdgePositions);
+
+  const glowMat = new THREE.MeshBasicMaterial({
+    color:0x4b237f,
+    transparent:true,
+    opacity:0.09,
+    side:THREE.DoubleSide,
+    depthWrite:false,
+    blending:THREE.AdditiveBlending
+  });
+  registerIdleMaterial(glowMat,0.09,0.035);
+  brainInteractionMesh = new THREE.Mesh(geometry,glowMat);
+  brainGroup.add(brainInteractionMesh);
+}
+
+function attachRegionSurfaceEffects(geometry,edgePositions){
+  const vertices = geometry.attributes.position;
+  const adjacency = buildMeshAdjacency(geometry);
+  const regionRadius = {
+    prefrontal:0.52,
+    broca:0.30,
+    motor:0.42,
+    parietal:0.46,
+    occipital:0.44,
+    temporal_l:0.34,
+    temporal_r:0.42,
+    amygdala:0.30,
+    cerebellum:0.36,
+    brainstem:0.30
+  };
+
+  REGIONS.forEach(region=>{
+    const rec = markers[region.id];
+    let nearestIndex = 0;
+    let nearestDistance = Infinity;
+    for(let i=0;i<vertices.count;i++){
+      const dx=vertices.getX(i)-rec.sprite.position.x;
+      const dy=vertices.getY(i)-rec.sprite.position.y;
+      const dz=vertices.getZ(i)-rec.sprite.position.z;
+      const distance=dx*dx+dy*dy+dz*dz;
+      if(distance<nearestDistance){
+        nearestDistance=distance;
+        nearestIndex=i;
+      }
+    }
+    rec.sprite.position.set(
+      vertices.getX(nearestIndex),
+      vertices.getY(nearestIndex),
+      vertices.getZ(nearestIndex)
+    );
+
+    const base=REGION_COLOR[region.id] || [0.6,0.85,1];
+    const color=new THREE.Color(base[0],base[1],base[2]);
+    const radius=regionRadius[region.id] || 0.4;
+    const effectCenter=rec.sprite.position.clone();
+    effectCenter.addScaledVector(effectCenter.clone().normalize(),-0.11);
+    rec.edgeGlows=[
+      createRegionSurfaceGlow(geometry,effectCenter,radius,color,0.24),
+      createRegionEdgeGlow(edgePositions,effectCenter,radius,color,0.72),
+      createRegionEdgeGlow(edgePositions,effectCenter,radius*0.62,color,0.98),
+      createRegionNodeGlow(edgePositions,effectCenter,radius*0.82,color,0.88)
+    ];
+    rec.edgeGlows.forEach(glow=>{
+      if(glow) brainGroup.add(glow);
+    });
+    rec.nervePaths=createNervePathVisuals(
+      vertices,
+      adjacency,
+      nearestIndex,
+      color,
+      effectCenter,
+      radius
+    );
+    rec.nervePaths.forEach(path=>{
+      brainGroup.add(path.line);
+      brainGroup.add(path.pulses);
+    });
+  });
+}
+
+function buildMeshAdjacency(geometry){
+  const neighbors=Array.from(
+    {length:geometry.attributes.position.count},
+    ()=>new Set()
+  );
+  const indices=geometry.index.array;
+  const connect=(a,b)=>{
+    neighbors[a].add(b);
+    neighbors[b].add(a);
+  };
+  for(let i=0;i<indices.length;i+=3){
+    const a=indices[i], b=indices[i+1], c=indices[i+2];
+    connect(a,b);
+    connect(b,c);
+    connect(c,a);
+  }
+  return neighbors.map(set=>Array.from(set));
+}
+
+function createNervePathVisuals(
+  vertices,
+  adjacency,
+  anchorIndex,
+  color,
+  regionCenter,
+  regionRadius
+){
+  const parent=new Int32Array(vertices.count);
+  const depth=new Int16Array(vertices.count);
+  const regionRadiusSquared=regionRadius*regionRadius;
+  parent.fill(-1);
+  depth.fill(-1);
+  depth[anchorIndex]=0;
+
+  const isInsideRegion=index=>{
+    const dx=vertices.getX(index)-regionCenter.x;
+    const dy=vertices.getY(index)-regionCenter.y;
+    const dz=vertices.getZ(index)-regionCenter.z;
+    return dx*dx+dy*dy+dz*dz<=regionRadiusSquared;
+  };
+
+  const queue=[anchorIndex];
+  for(let head=0;head<queue.length;head++){
+    const current=queue[head];
+    if(depth[current]>=34) continue;
+    adjacency[current].forEach(next=>{
+      if(depth[next]!==-1 || !isInsideRegion(next)) return;
+      depth[next]=depth[current]+1;
+      parent[next]=current;
+      queue.push(next);
+    });
+  }
+
+  const ax=vertices.getX(anchorIndex);
+  const ay=vertices.getY(anchorIndex);
+  const az=vertices.getZ(anchorIndex);
+  const candidates=[];
+  for(let i=0;i<depth.length;i++){
+    if(depth[i]<3) continue;
+    const dx=vertices.getX(i)-ax;
+    const dy=vertices.getY(i)-ay;
+    const dz=vertices.getZ(i)-az;
+    const distance=Math.sqrt(dx*dx+dy*dy+dz*dz);
+    if(
+      distance>=Math.min(0.25,regionRadius*0.55)
+      && distance<=regionRadius*1.7
+    ){
+      candidates.push({index:i,distance});
+    }
+  }
+  candidates.sort((a,b)=>b.distance-a.distance);
+
+  const endpoints=[];
+  while(endpoints.length<6 && candidates.length){
+    let bestPosition=0;
+    let bestScore=-Infinity;
+    candidates.forEach((candidate,index)=>{
+      const cx=vertices.getX(candidate.index);
+      const cy=vertices.getY(candidate.index);
+      const cz=vertices.getZ(candidate.index);
+      let separation=candidate.distance;
+      endpoints.forEach(endpoint=>{
+        const dx=cx-vertices.getX(endpoint.index);
+        const dy=cy-vertices.getY(endpoint.index);
+        const dz=cz-vertices.getZ(endpoint.index);
+        separation=Math.min(separation,Math.sqrt(dx*dx+dy*dy+dz*dz));
+      });
+      const score=candidate.distance+separation*1.8;
+      if(score>bestScore){
+        bestScore=score;
+        bestPosition=index;
+      }
+    });
+    endpoints.push(candidates.splice(bestPosition,1)[0]);
+  }
+
+  return endpoints.map((endpoint,pathIndex)=>{
+    const vertexPath=[];
+    let current=endpoint.index;
+    while(current!==-1){
+      vertexPath.push(current);
+      if(current===anchorIndex) break;
+      current=parent[current];
+    }
+    vertexPath.reverse();
+
+    const points=vertexPath.map(index=>new THREE.Vector3(
+      vertices.getX(index),
+      vertices.getY(index),
+      vertices.getZ(index)
+    ));
+    const cumulative=new Float32Array(points.length);
+    for(let i=1;i<points.length;i++){
+      cumulative[i]=cumulative[i-1]+points[i].distanceTo(points[i-1]);
+    }
+
+    const pathGeometry=new THREE.BufferGeometry().setFromPoints(points);
+    const pathMaterial=new THREE.LineBasicMaterial({
+      color,
+      transparent:true,
+      opacity:0,
+      depthWrite:false,
+      blending:THREE.NormalBlending
+    });
+    const line=new THREE.Line(pathGeometry,pathMaterial);
+
+    const trailCount=8;
+    const pulsePositions=new Float32Array(trailCount*3);
+    for(let i=0;i<trailCount;i++){
+      pulsePositions[i*3]=points[0].x;
+      pulsePositions[i*3+1]=points[0].y;
+      pulsePositions[i*3+2]=points[0].z;
+    }
+    const pulseGeometry=new THREE.BufferGeometry();
+    pulseGeometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(pulsePositions,3).setUsage(THREE.DynamicDrawUsage)
+    );
+    const pulseMaterial=new THREE.PointsMaterial({
+      color,
+      map:particleTex,
+      size:0.062,
+      transparent:true,
+      opacity:0,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending,
+      sizeAttenuation:true
+    });
+    const pulses=new THREE.Points(pulseGeometry,pulseMaterial);
+
+    return {
+      line,
+      pulses,
+      points,
+      cumulative,
+      totalLength:cumulative[cumulative.length-1] || 1,
+      delay:pathIndex*110,
+      duration:(1050+pathIndex*95)/0.4275,
+      trailCount
+    };
+  });
+}
+
+const nerveSample=new THREE.Vector3();
+function sampleNervePath(path,progress,target){
+  const distance=Math.max(0,Math.min(1,progress))*path.totalLength;
+  let segment=1;
+  while(
+    segment<path.cumulative.length-1
+    && path.cumulative[segment]<distance
+  ){
+    segment++;
+  }
+  const startDistance=path.cumulative[segment-1];
+  const endDistance=path.cumulative[segment];
+  const span=endDistance-startDistance || 1;
+  const amount=(distance-startDistance)/span;
+  target.copy(path.points[segment-1]).lerp(path.points[segment],amount);
+  return target;
+}
+
+function updateNervePaths(rec,now,isActive,pulse){
+  rec.nervePaths.forEach(path=>{
+    if(isActive){
+      const strength=rec.strength || 0.6;
+      const lineTarget=(0.08+strength*0.12)*pulse;
+      const pulseTarget=(0.62+strength*0.32)*pulse;
+      path.line.material.opacity+=(lineTarget-path.line.material.opacity)*0.14;
+      path.pulses.material.opacity+=(pulseTarget-path.pulses.material.opacity)*0.22;
+
+      const elapsed=Math.max(0,now-rec.activeFrom-path.delay);
+      const progress=(elapsed%path.duration)/path.duration;
+      const positions=path.pulses.geometry.attributes.position.array;
+      for(let i=0;i<path.trailCount;i++){
+        const trailProgress=Math.max(0,progress-i*0.026);
+        sampleNervePath(path,trailProgress,nerveSample);
+        positions[i*3]=nerveSample.x;
+        positions[i*3+1]=nerveSample.y;
+        positions[i*3+2]=nerveSample.z;
+      }
+      path.pulses.geometry.attributes.position.needsUpdate=true;
+    } else {
+      path.line.material.opacity*=0.88;
+      path.pulses.material.opacity*=0.82;
+    }
+  });
+}
+
+function createRegionEdgeGlow(edgePositions,origin,radius,color,maxOpacity){
+  const selected=[];
+  for(let i=0;i<edgePositions.length;i+=6){
+    const mx=(edgePositions[i]+edgePositions[i+3])*0.5;
+    const my=(edgePositions[i+1]+edgePositions[i+4])*0.5;
+    const mz=(edgePositions[i+2]+edgePositions[i+5])*0.5;
+    const dx=mx-origin.x, dy=my-origin.y, dz=mz-origin.z;
+    if(dx*dx+dy*dy+dz*dz<=radius*radius){
+      selected.push(
+        edgePositions[i],edgePositions[i+1],edgePositions[i+2],
+        edgePositions[i+3],edgePositions[i+4],edgePositions[i+5]
+      );
+    }
+  }
+  if(!selected.length) return null;
+
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(selected,3));
+  const material=new THREE.LineBasicMaterial({
+    color,
+    transparent:true,
+    opacity:0,
+    depthWrite:false,
+    blending:THREE.NormalBlending
+  });
+  const line=new THREE.LineSegments(geometry,material);
+  line.userData.maxOpacity=maxOpacity;
+  return line;
+}
+
+function createRegionNodeGlow(edgePositions,origin,radius,color,maxOpacity){
+  const selected=[];
+  const seen=new Set();
+  for(let i=0;i<edgePositions.length;i+=3){
+    const x=edgePositions[i], y=edgePositions[i+1], z=edgePositions[i+2];
+    const dx=x-origin.x, dy=y-origin.y, dz=z-origin.z;
+    if(dx*dx+dy*dy+dz*dz>radius*radius) continue;
+    const key=`${x.toFixed(4)},${y.toFixed(4)},${z.toFixed(4)}`;
+    if(seen.has(key)) continue;
+    seen.add(key);
+    selected.push(x,y,z);
+  }
+  if(!selected.length) return null;
+
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(selected,3));
+  const material=new THREE.PointsMaterial({
+    color,
+    map:particleTex,
+    size:0.045,
+    transparent:true,
+    opacity:0,
+    depthWrite:false,
+    blending:THREE.NormalBlending,
+    sizeAttenuation:true
+  });
+  const points=new THREE.Points(geometry,material);
+  points.userData.maxOpacity=maxOpacity;
+  return points;
+}
+
+function createRegionSurfaceGlow(geometry,origin,radius,color,maxOpacity){
+  const vertices=geometry.attributes.position;
+  const indices=geometry.index.array;
+  const selected=[];
+  for(let i=0;i<indices.length;i+=3){
+    const a=indices[i], b=indices[i+1], c=indices[i+2];
+    const cx=(vertices.getX(a)+vertices.getX(b)+vertices.getX(c))/3;
+    const cy=(vertices.getY(a)+vertices.getY(b)+vertices.getY(c))/3;
+    const cz=(vertices.getZ(a)+vertices.getZ(b)+vertices.getZ(c))/3;
+    const dx=cx-origin.x, dy=cy-origin.y, dz=cz-origin.z;
+    if(dx*dx+dy*dy+dz*dz>radius*radius) continue;
+    [a,b,c].forEach(index=>{
+      selected.push(vertices.getX(index),vertices.getY(index),vertices.getZ(index));
+    });
+  }
+  if(!selected.length) return null;
+
+  const patchGeometry=new THREE.BufferGeometry();
+  patchGeometry.setAttribute('position',new THREE.Float32BufferAttribute(selected,3));
+  const material=new THREE.MeshBasicMaterial({
+    color,
+    transparent:true,
+    opacity:0,
+    side:THREE.DoubleSide,
+    depthWrite:false,
+    blending:THREE.NormalBlending
+  });
+  const patch=new THREE.Mesh(patchGeometry,material);
+  patch.userData.maxOpacity=maxOpacity;
+  return patch;
+}
+
+fetch('/static/models/brain.obj')
+  .then(response=>{
+    if(!response.ok) throw new Error(`Brain model request failed (${response.status}).`);
+    return response.text();
+  })
+  .then(source=>addAnatomicalBrain(parseBrainOBJ(source)))
+  .catch(error=>{
+    console.error('Unable to load anatomical brain:',error);
+    const message = document.createElement('div');
+    message.className = 'fixed left-1/2 top-1/2 -translate-x-1/2 text-xs tracking-widest text-red-300';
+    message.textContent = 'ANATOMICAL BRAIN MODEL FAILED TO LOAD';
+    document.body.appendChild(message);
+  });
+
+brainGroup.rotation.y = -1.22;
+brainGroup.rotation.x = 0.05;
+brainGroup.position.y = 0.45; // lift the model so it clears the bottom console/explanation panel
+brainGroup.scale.setScalar(1.416);
+
+// ============================================================
+// GLOW TEXTURE
+// ============================================================
+function makeGlowTexture(hex){
+  const c = document.createElement('canvas'); c.width=c.height=128;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createRadialGradient(64,64,0,64,64,64);
+  grad.addColorStop(0, hex); 
+  grad.addColorStop(0.35, hex);
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,128,128);
+  const tex = new THREE.CanvasTexture(c);
+  return tex;
+}
+const markerTexDim = makeGlowTexture('rgba(140,170,255,0.9)');
+const markerTexHot = makeGlowTexture('rgba(180,235,255,1)');
+
+// ============================================================
+// REGION MARKERS
+// ============================================================
+const markers = {};
+REGIONS.forEach(r=>{
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: markerTexDim, transparent:true, depthWrite:false,
+    blending:THREE.AdditiveBlending, opacity:0.18
+  }));
+  sprite.position.set(r.pos[0], r.pos[1], r.pos[2]);
+  sprite.scale.set(0.075,0.075,0.075);
+  brainGroup.add(sprite);
+
+  markers[r.id] = {
+    region:r,
+    sprite,
+    activeFrom:0,
+    activeUntil:0,
+    baseScale:0.075,
+    lastEmit:0,
+    edgeGlows:[],
+    nervePaths:[]
+  };
+});
+
+// ============================================================
+// ACTIVATION PARTICLE SYSTEM (pooled, ring-buffer)
+// ============================================================
+const MAX_PARTICLES = 2200;
+const pPos   = new Float32Array(MAX_PARTICLES*3); // live position
+const pVel   = new Float32Array(MAX_PARTICLES*3); // velocity
+const pBase  = new Float32Array(MAX_PARTICLES*3); // base (unfaded) color
+const pLife  = new Float32Array(MAX_PARTICLES);   // remaining life (s)
+const pMax   = new Float32Array(MAX_PARTICLES);   // total life (s)
+let pCursor = 0;
+
+const particleGeo = new THREE.BufferGeometry();
+const gpuPos = new Float32Array(MAX_PARTICLES*3);
+const gpuCol = new Float32Array(MAX_PARTICLES*3);
+particleGeo.setAttribute('position', new THREE.BufferAttribute(gpuPos,3).setUsage(THREE.DynamicDrawUsage));
+particleGeo.setAttribute('color', new THREE.BufferAttribute(gpuCol,3).setUsage(THREE.DynamicDrawUsage));
+const particleTex = makeGlowTexture('rgba(255,255,255,1)');
+const particleMat = new THREE.PointsMaterial({
+  size:0.03, map:particleTex, vertexColors:true, transparent:true,
+  depthWrite:false, blending:THREE.AdditiveBlending, sizeAttenuation:true
+});
+const particleSystem = new THREE.Points(particleGeo, particleMat);
+brainGroup.add(particleSystem);
+
+const REGION_COLOR = {
+  prefrontal:[0.0,1.0,0.55],
+  broca:[1.0,0.28,0.0],
+  motor:[0.2,1.0,0.1],
+  parietal:[1.0,0.55,0.70],
+  occipital:[1.0,0.95,0.0],
+  temporal_l:[1.0,1.0,1.0],
+  temporal_r:[0.0,0.68,0.42],
+  amygdala:[1.0,0.0,0.05],
+  cerebellum:[0.65,1.0,0.0],
+  brainstem:[1.0,0.65,0.0]
+};
+
+function softColor(base){
+  return [base[0]*0.9+0.05,base[1]*0.9+0.05,base[2]*0.9+0.05];
+}
+
+function spawnWaveParticles(rec, strength, count){
+  const origin = rec.sprite.position;
+  const normal = origin.clone().normalize();
+  // build two tangent axes perpendicular to the outward normal
+  const arbitrary = Math.abs(normal.y) < 0.9 ? new THREE.Vector3(0,1,0) : new THREE.Vector3(1,0,0);
+  const tanA = new THREE.Vector3().crossVectors(normal, arbitrary).normalize();
+  const tanB = new THREE.Vector3().crossVectors(normal, tanA).normalize();
+  const col = REGION_COLOR[rec.region.id] || [0.6,0.85,1.0];
+
+  for(let i=0;i<count;i++){
+    const idx = pCursor; pCursor = (pCursor+1) % MAX_PARTICLES;
+
+    const jitterR = () => (Math.random()*2-1);
+    const startOff = 0.015;
+    pPos[idx*3]   = origin.x + normal.x*startOff;
+    pPos[idx*3+1] = origin.y + normal.y*startOff;
+    pPos[idx*3+2] = origin.z + normal.z*startOff;
+
+    const spread = 0.4 * (0.4 + strength);
+    const along = jitterR()*spread, across = jitterR()*spread;
+    const outSpeed = 0.12 + Math.random()*0.1*(0.5+strength);
+
+    const vx = normal.x*outSpeed + tanA.x*along + tanB.x*across;
+    const vy = normal.y*outSpeed + tanA.y*along + tanB.y*across;
+    const vz = normal.z*outSpeed + tanA.z*along + tanB.z*across;
+    pVel[idx*3]=vx; pVel[idx*3+1]=vy; pVel[idx*3+2]=vz;
+
+    const life = 1.6 + Math.random()*1.1;
+    pLife[idx]=life; pMax[idx]=life;
+
+    const softCol = softColor(col);
+    const flicker = 0.8+Math.random()*0.3;
+    pBase[idx*3]=softCol[0]*flicker; pBase[idx*3+1]=softCol[1]*flicker; pBase[idx*3+2]=softCol[2]*flicker;
+  }
+}
+
+let lastFrameTime = performance.now();
+
+// ============================================================
+// DRAG-TO-ROTATE (manual only — no auto-rotate)
+// ============================================================
+let isDragging=false, lastX=0, lastY=0;
+const dom = renderer.domElement;
+const hoverRaycaster=new THREE.Raycaster();
+const hoverPointer=new THREE.Vector2();
+const hoverRotationTarget=new THREE.Vector2();
+const hoverPositionTarget=new THREE.Vector2();
+
+function updateBrainHover(e){
+  if(isDragging || !brainInteractionMesh){
+    hoverRotationTarget.set(0,0);
+    hoverPositionTarget.set(0,0);
+    return;
+  }
+
+  const bounds=dom.getBoundingClientRect();
+  hoverPointer.x=((e.clientX-bounds.left)/bounds.width)*2-1;
+  hoverPointer.y=-((e.clientY-bounds.top)/bounds.height)*2+1;
+  hoverRaycaster.setFromCamera(hoverPointer,camera);
+  scene.updateMatrixWorld(true);
+
+  if(!hoverRaycaster.intersectObject(brainInteractionMesh,false).length){
+    hoverRotationTarget.set(0,0);
+    hoverPositionTarget.set(0,0);
+    return;
+  }
+
+  hoverRotationTarget.set(
+    hoverPointer.y*0.045,
+    hoverPointer.x*0.065
+  );
+  hoverPositionTarget.set(
+    hoverPointer.x*0.025,
+    hoverPointer.y*0.015
+  );
+}
+
+dom.addEventListener('pointerdown', (e)=>{
+  isDragging=true;
+  lastX=e.clientX;
+  lastY=e.clientY;
+  hoverRotationTarget.set(0,0);
+  hoverPositionTarget.set(0,0);
+  dom.setPointerCapture(e.pointerId);
+});
+dom.addEventListener('pointerup', (e)=>{
+  isDragging=false;
+  updateBrainHover(e);
+});
+dom.addEventListener('pointerleave', ()=>{
+  isDragging=false;
+  hoverRotationTarget.set(0,0);
+  hoverPositionTarget.set(0,0);
+});
+dom.addEventListener('pointermove', (e)=>{
+  if(isDragging){
+    const dx = e.clientX-lastX, dy = e.clientY-lastY;
+    brainGroup.rotation.y += dx*0.005;
+    brainGroup.rotation.x = Math.max(-0.6, Math.min(0.6, brainGroup.rotation.x + dy*0.005));
+    lastX = e.clientX;
+    lastY = e.clientY;
+    return;
+  }
+  updateBrainHover(e);
+});
+
+// ============================================================
+// LIGHTS (subtle, wireframe doesn't need much)
+// ============================================================
+scene.add(new THREE.AmbientLight(0x8899ff, 0.6));
+
+// ============================================================
+// UI: region readout list
+// ============================================================
+const regionListEl = document.getElementById('regionList');
+const activeCountEl = document.getElementById('activeCount');
+const rowEls = {};
+REGIONS.forEach(r=>{
+  const row = document.createElement('div');
+  row.className = 'region-row';
+  row.style.setProperty('--region-color',regionColorCss(r.id));
+  row.innerHTML = `<div class="bar"><i></i></div><div>${r.label}</div>`;
+  regionListEl.appendChild(row);
+  rowEls[r.id] = row;
+});
+
+// tag layer (floating HTML labels above canvas)
+const tagLayer = document.getElementById('tagLayer');
+const tagEls = {};
+REGIONS.forEach(r=>{
+  const tag = document.createElement('div');
+  tag.className = 'tag';
+  tag.innerHTML = `<div class="box"><div class="nm">${r.label}</div><div class="fn">${r.fn}</div></div><div class="stem"></div>`;
+  tagLayer.appendChild(tag);
+  tagEls[r.id] = tag;
+});
+
+// ============================================================
+// SIMULATION TRIGGER
+// ============================================================
+const statusLine = document.getElementById('status-line');
+const input = document.getElementById('intentInput');
+const btn = document.getElementById('simBtn');
+
+const explainPanel = document.getElementById('explainPanel');
+const intentInspector = document.getElementById('intentInspector');
+const nlpState = document.getElementById('nlpState');
+const nlpPrimary = document.getElementById('nlpPrimary');
+const nlpMeta = document.getElementById('nlpMeta');
+const nlpReason = document.getElementById('nlpReason');
+const nlpEvidence = document.getElementById('nlpEvidence');
+const nlpSignals = document.getElementById('nlpSignals');
+const nlpModel = document.getElementById('nlpModel');
+
+function regionColorCss(id){
+  const c = REGION_COLOR[id] || [0.6,0.85,1.0];
+  return `rgb(${Math.round(c[0]*255)},${Math.round(c[1]*255)},${Math.round(c[2]*255)})`;
+}
+
+function emotionColorCss(id){
+  if(['anger','annoyance','disappointment','disapproval','disgust','fear','grief','remorse','sadness'].includes(id)){
+    return 'rgb(255,92,76)';
+  }
+  if(['admiration','amusement','approval','caring','excitement','gratitude','joy','love','optimism','pride','relief'].includes(id)){
+    return 'rgb(255,204,74)';
+  }
+  if(['confusion','curiosity','realization','surprise'].includes(id)){
+    return 'rgb(86,255,188)';
+  }
+  return 'rgb(235,240,255)';
+}
+
+function appendNlpLayer(title,items,colorFor,labelFor){
+  if(!items.length) return;
+  const heading=document.createElement('div');
+  heading.className='nlp-layer-title';
+  heading.textContent=title;
+  nlpSignals.appendChild(heading);
+  items.forEach(item=>{
+    const signal=document.createElement('span');
+    signal.className='nlp-signal';
+    signal.style.setProperty('--signal-color',colorFor(item));
+    signal.textContent=labelFor(item);
+    nlpSignals.appendChild(signal);
+  });
+}
+
+function setNlpInspectorProcessing(){
+  intentInspector.classList.add('processing');
+  intentInspector.style.setProperty('--intent-color','var(--accent-cyan)');
+  nlpState.textContent='Processing';
+  nlpPrimary.textContent='Understanding emotion and intent…';
+  nlpMeta.textContent='Running multi-label emotion and semantic intent analysis';
+  nlpReason.textContent='Empwave will combine both layers through its region mapping.';
+  nlpEvidence.textContent='Waiting for NLP evidence';
+  nlpSignals.replaceChildren();
+}
+
+function setNlpInspectorError(message){
+  intentInspector.classList.remove('processing');
+  intentInspector.style.setProperty('--intent-color','rgb(255,80,110)');
+  nlpState.textContent='Error';
+  nlpPrimary.textContent='Analysis unavailable';
+  nlpMeta.textContent='The NLP request did not complete';
+  nlpReason.textContent=message;
+  nlpEvidence.textContent='No semantic evidence returned';
+  nlpSignals.replaceChildren();
+}
+
+function renderNlpInspector(analysis){
+  const primary=analysis.primary_intent;
+  const primaryRegion=REGIONS.find(region=>region.id===primary.region_id);
+  const primaryColor=regionColorCss(primary.region_id);
+
+  intentInspector.classList.remove('processing');
+  intentInspector.style.setProperty('--intent-color',primaryColor);
+  nlpState.textContent='Complete';
+  nlpPrimary.textContent=primary.label;
+  nlpMeta.textContent=`${analysis.emotions.length} emotions · ${analysis.intents.length} intents · ${primaryRegion.label} ${Math.round(primary.score*100)}%`;
+  nlpReason.textContent=primary.reason;
+  nlpEvidence.textContent=`Evidence · “${primary.evidence}”`;
+  nlpModel.textContent=`MODEL · ${analysis.model.split('/').pop().toUpperCase()}`;
+  nlpSignals.replaceChildren();
+
+  appendNlpLayer(
+    'Emotions',
+    analysis.emotions.slice(0,3),
+    item=>emotionColorCss(item.id),
+    item=>`${item.label} ${Math.round(item.score*100)}%`
+  );
+  appendNlpLayer(
+    'Intents',
+    analysis.intents.filter(item=>item.id!=='temporal_l').slice(0,3),
+    item=>regionColorCss(item.id),
+    item=>`${item.label} ${Math.round(item.score*100)}%`
+  );
+  appendNlpLayer(
+    'Derived regions',
+    analysis.regions,
+    item=>regionColorCss(item.id),
+    item=>REGIONS.find(region=>region.id===item.id).label
+  );
+}
+
+async function runSimulation(){
+  const text = input.value.trim();
+  if(!text){
+    statusLine.textContent = 'Type something first — describe a thought, action, or feeling';
+    statusLine.classList.remove('live');
+    return;
+  }
+
+  btn.disabled=true;
+  statusLine.textContent='Analyzing listener response with the local NLP model…';
+  statusLine.classList.add('live');
+  setNlpInspectorProcessing();
+
+  let analysis;
+  try{
+    const response=await fetch('/api/process-speech',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text})
+    });
+    analysis=await response.json();
+    if(!response.ok || analysis.status!=='success'){
+      throw new Error(analysis.message || `NLP request failed (${response.status})`);
+    }
+  } catch(error){
+    console.error('Semantic NLP analysis failed:',error);
+    statusLine.textContent=`Unable to analyze this message: ${error.message}`;
+    statusLine.classList.remove('live');
+    setNlpInspectorError(error.message);
+    btn.disabled=false;
+    return;
+  }
+
+  if(!analysis.primary_intent){
+    statusLine.textContent='The NLP model returned an incomplete analysis.';
+    statusLine.classList.remove('live');
+    setNlpInspectorError('Missing primary intent in the NLP response.');
+    btn.disabled=false;
+    return;
+  }
+
+  const matched=[];
+  for(const result of analysis.regions){
+    const region=REGIONS.find(candidate=>candidate.id===result.id);
+    if(!region){
+      console.error('Unknown brain region returned by NLP API:',result.id);
+      statusLine.textContent='The NLP model returned an unsupported brain region.';
+      statusLine.classList.remove('live');
+      setNlpInspectorError(`Unsupported region: ${result.id}`);
+      btn.disabled=false;
+      return;
+    }
+    matched.push({...result,region});
+  }
+  const now = performance.now();
+
+  // reset all rows
+  REGIONS.forEach(r=>{
+    const rec=markers[r.id];
+    rec.activeFrom=0;
+    rec.activeUntil=0;
+    rec.edgeGlows.forEach(glow=>{
+      if(glow) glow.material.opacity=0;
+    });
+    rec.nervePaths.forEach(path=>{
+      path.line.material.opacity=0;
+      path.pulses.material.opacity=0;
+    });
+    rowEls[r.id].classList.remove('active');
+    rowEls[r.id].querySelector('i').style.width='6%';
+  });
+
+  const activeIds = new Set();
+  const explanations = [];
+
+  matched.forEach((m, idx)=>{
+    activeIds.add(m.region.id);
+    const strength=m.strength;
+    triggerRegion(m.region.id, now, strength, idx*140);
+
+    const reason=`${m.reason} Semantic evidence: “${m.evidence}”.`;
+    explanations.push({ id:m.region.id, label:m.region.label, fn:m.region.fn, reason, strength });
+  });
+
+  activeCountEl.textContent = activeIds.size + '/10';
+  statusLine.textContent = `Simulating: "${text}" → ${matched.map(m=>m.region.label).join(', ')}`;
+  statusLine.classList.add('live');
+  renderNlpInspector(analysis);
+  btn.disabled=false;
+
+  renderExplanations(explanations, text);
+
+  // ------------------------------------------------------------------
+  // INTEGRATION HOOK: exposed for external code (e.g. a Python/TTS
+  // backend via a bridge, or a copilot wiring this into a larger app).
+  // window.lastActivation always holds the most recent simulation result.
+  // spokenSummary is a plain-text sentence suitable for feeding straight
+  // into a TTS engine.
+  // ------------------------------------------------------------------
+  window.lastActivation = {
+    inputText: text,
+    model:analysis.model,
+    baselineOnly:analysis.baseline_only,
+    regions: explanations,
+    spokenSummary: explanations.map(e => `${e.label}: ${e.reason}`).join(' ')
+  };
+  window.dispatchEvent(new CustomEvent('brain-simulation', { detail: window.lastActivation }));
+}
+
+function renderExplanations(explanations, text){
+  if(explanations.length===0){ explainPanel.classList.remove('show'); explainPanel.innerHTML=''; return; }
+  explainPanel.innerHTML = explanations.map(e => `
+    <div class="explain-card" style="border-left-color:${regionColorCss(e.id)}">
+      <div class="dot" style="background:${regionColorCss(e.id)}"></div>
+      <div class="body">
+        <div class="nm">${escapeHtml(e.label)}</div>
+        <div class="fn">${escapeHtml(e.fn)}</div>
+        <div class="why">${escapeHtml(e.reason)}</div>
+      </div>
+    </div>
+  `).join('');
+  explainPanel.classList.add('show');
+}
+
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g,character=>({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#039;'
+  })[character]);
+}
+
+function triggerRegion(id, now, strength, delay){
+  const rec = markers[id];
+  rec.activeFrom = now + delay;
+  rec.activeUntil = rec.activeFrom + 5200;
+  rec.strength = strength;
+  rec.lastEmit = 0;
+  rowEls[id].classList.add('active');
+  rowEls[id].querySelector('i').style.width = Math.round(strength*100)+'%';
+
+  setTimeout(()=>{
+    spawnWaveParticles(rec, strength, Math.round(6 + strength*6));
+  }, delay);
+}
+
+btn.addEventListener('click', runSimulation);
+input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') runSimulation(); });
+
+// ============================================================
+// RENDER LOOP
+// ============================================================
+const tmpVec = new THREE.Vector3();
+function updateTag(id, worldPos, active){
+  tmpVec.copy(worldPos).project(camera);
+  const x = (tmpVec.x*0.5+0.5)*window.innerWidth;
+  const y = (1-(tmpVec.y*0.5+0.5))*window.innerHeight;
+  const tag = tagEls[id];
+  tag.style.left = x+'px';
+  tag.style.top = y+'px';
+  if(active) tag.classList.add('show'); else tag.classList.remove('show');
+}
+
+function animate(t){
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min(0.05, (now - lastFrameTime)/1000);
+  lastFrameTime = now;
+  let hasActiveRegion=false;
+
+  brainHoverGroup.rotation.x+=(hoverRotationTarget.x-brainHoverGroup.rotation.x)*0.075;
+  brainHoverGroup.rotation.y+=(hoverRotationTarget.y-brainHoverGroup.rotation.y)*0.075;
+  brainHoverGroup.position.x+=(hoverPositionTarget.x-brainHoverGroup.position.x)*0.075;
+  brainHoverGroup.position.y+=(hoverPositionTarget.y-brainHoverGroup.position.y)*0.075;
+
+  REGIONS.forEach(r=>{
+    const rec = markers[r.id];
+    const isActive = now >= rec.activeFrom && now < rec.activeUntil;
+    const mat = rec.sprite.material;
+
+    if(isActive){
+      hasActiveRegion=true;
+      const pulse = 0.8 + Math.sin(now*0.0032)*0.2;
+      const regionColor=REGION_COLOR[r.id] || [0.6,0.85,1];
+      rowEls[r.id].classList.add('active');
+      rowEls[r.id].querySelector('i').style.width=Math.round((rec.strength||0.6)*100)+'%';
+      mat.map=markerTexHot;
+      mat.color.setRGB(regionColor[0],regionColor[1],regionColor[2]);
+      mat.opacity = (0.34+(rec.strength||0.6)*0.24)*pulse;
+      const sc = rec.baseScale*(1.18+Math.sin(now*0.0032)*0.12);
+      rec.sprite.scale.set(sc,sc,sc);
+
+      // Illuminate the actual anatomical edges around this region.
+      rec.edgeGlows.forEach(glow=>{
+        if(!glow) return;
+        const target = glow.userData.maxOpacity*(rec.strength||0.6)*pulse;
+        glow.material.opacity += (target-glow.material.opacity)*0.16;
+      });
+      updateNervePaths(rec,now,true,pulse);
+
+      if(now - rec.lastEmit > 320){
+        rec.lastEmit = now;
+        spawnWaveParticles(rec, rec.strength||0.6, 4);  // increased from 2
+      }
+    } else {
+      mat.map = markerTexDim;
+      mat.color.setRGB(0.55,0.67,1);
+      mat.opacity += (0.18-mat.opacity)*0.05;
+      rec.sprite.scale.lerp(new THREE.Vector3(rec.baseScale,rec.baseScale,rec.baseScale), 0.08);
+      rec.edgeGlows.forEach(glow=>{
+        if(glow) glow.material.opacity *= 0.9;
+      });
+      updateNervePaths(rec,now,false,0);
+
+      if(now>=rec.activeUntil && rowEls[r.id].classList.contains('active')){
+        rowEls[r.id].classList.remove('active');
+        rowEls[r.id].querySelector('i').style.width='6%';
+      }
+    }
+
+    // world position of marker for tag placement
+    const wp = rec.sprite.getWorldPosition(tmpVec.clone());
+    updateTag(r.id, wp, isActive);
+  });
+
+  idleBrainMaterials.forEach(entry=>{
+    const target=hasActiveRegion ? entry.activeOpacity : entry.idleOpacity;
+    entry.material.opacity+=(target-entry.material.opacity)*0.08;
+  });
+
+  // advect + fade the particle pool
+  for(let i=0;i<MAX_PARTICLES;i++){
+    if(pLife[i] > 0){
+      pLife[i] -= dt;
+      const i3 = i*3;
+      pVel[i3]*=0.985; pVel[i3+1]*=0.985; pVel[i3+2]*=0.985;
+      pPos[i3]   += pVel[i3]*dt;
+      pPos[i3+1] += pVel[i3+1]*dt;
+      pPos[i3+2] += pVel[i3+2]*dt;
+
+      const ratio = Math.max(0, pLife[i]/pMax[i]);
+      const fade = ratio*ratio; // ease-out fade
+      gpuPos[i3]=pPos[i3]; gpuPos[i3+1]=pPos[i3+1]; gpuPos[i3+2]=pPos[i3+2];
+      gpuCol[i3]=pBase[i3]*fade; gpuCol[i3+1]=pBase[i3+1]*fade; gpuCol[i3+2]=pBase[i3+2]*fade;
+    } else if(gpuCol[i*3] !== 0 || gpuCol[i*3+1] !== 0 || gpuCol[i*3+2] !== 0){
+      const i3=i*3;
+      gpuCol[i3]=0; gpuCol[i3+1]=0; gpuCol[i3+2]=0;
+    }
+  }
+
+  particleGeo.attributes.position.needsUpdate = true;
+  particleGeo.attributes.color.needsUpdate = true;
+
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(animate);
+
+// legend
+const legendModal=document.getElementById('legendModal');
+const legendToggle=document.getElementById('legendToggle');
+const legendClose=document.getElementById('legendClose');
+const legendGrid=document.getElementById('legendGrid');
+
+legendGrid.innerHTML=REGIONS.map(region=>`
+  <div class="legend-item" style="--region-color:${regionColorCss(region.id)}">
+    <div class="legend-signal"></div>
+    <div>
+      <div class="legend-name">${region.label}</div>
+      <div class="legend-function">${region.fn}</div>
+    </div>
+  </div>
+`).join('');
+
+function setLegendOpen(open){
+  legendModal.classList.toggle('open',open);
+  legendModal.setAttribute('aria-hidden',String(!open));
+  if(open) legendClose.focus();
+  else legendToggle.focus();
+}
+
+legendToggle.addEventListener('click',()=>setLegendOpen(true));
+legendClose.addEventListener('click',()=>setLegendOpen(false));
+legendModal.addEventListener('click',event=>{
+  if(event.target===legendModal) setLegendOpen(false);
+});
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape' && legendModal.classList.contains('open')){
+    setLegendOpen(false);
+  }
+});
+
+})();
+</script>
+</body>
+</html>

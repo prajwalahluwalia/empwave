@@ -1,0 +1,196 @@
+{
+  "train": {
+    "examples": 47356,
+    "sources": {
+      "GoEmotions": 43189,
+      "MultiNLI": 4167
+    },
+    "label_sources": {
+      "human_annotation_mapped": 43189,
+      "semantic_weak_label": 4167
+    },
+    "region_counts": {
+      "amygdala": 31532,
+      "occipital": 125,
+      "prefrontal": 4926,
+      "temporal_r": 200,
+      "broca": 21,
+      "temporal_l": 174,
+      "brainstem": 19,
+      "motor": 18,
+      "parietal": 85,
+      "cerebellum": 6
+    },
+    "emotion_counts": {
+      "disgust": 791,
+      "neutral": 14170,
+      "amusement": 2324,
+      "admiration": 4114,
+      "caring": 1080,
+      "disapproval": 2018,
+      "anger": 1563,
+      "excitement": 839,
+      "joy": 1436,
+      "approval": 2934,
+      "gratitude": 2609,
+      "curiosity": 2185,
+      "remorse": 543,
+      "annoyance": 2463,
+      "disappointment": 1266,
+      "love": 2061,
+      "optimism": 1574,
+      "confusion": 1363,
+      "surprise": 1056,
+      "fear": 594,
+      "sadness": 1319,
+      "realization": 1108,
+      "grief": 77,
+      "nervousness": 164,
+      "pride": 110,
+      "embarrassment": 302,
+      "desire": 641,
+      "relief": 153
+    },
+    "intent_counts": {
+      "occipital": 125,
+      "amygdala": 1126,
+      "prefrontal": 531,
+      "temporal_r": 200,
+      "broca": 21,
+      "temporal_l": 174,
+      "brainstem": 19,
+      "motor": 18,
+      "parietal": 85,
+      "cerebellum": 6
+    },
+    "neutral_examples": 14783
+  },
+  "validation": {
+    "examples": 7505,
+    "sources": {
+      "GoEmotions": 5375,
+      "MultiNLI": 2130
+    },
+    "label_sources": {
+      "human_annotation_mapped": 5375,
+      "semantic_weak_label": 2130
+    },
+    "region_counts": {
+      "amygdala": 3862,
+      "parietal": 7,
+      "prefrontal": 520,
+      "temporal_r": 20,
+      "temporal_l": 9,
+      "motor": 3,
+      "occipital": 4,
+      "broca": 2
+    },
+    "emotion_counts": {
+      "sadness": 142,
+      "confusion": 149,
+      "neutral": 1759,
+      "annoyance": 303,
+      "admiration": 485,
+      "gratitude": 342,
+      "excitement": 94,
+      "disgust": 96,
+      "fear": 89,
+      "curiosity": 247,
+      "disappointment": 162,
+      "amusement": 301,
+      "realization": 127,
+      "joy": 170,
+      "disapproval": 292,
+      "optimism": 209,
+      "surprise": 129,
+      "love": 244,
+      "remorse": 68,
+      "approval": 394,
+      "caring": 151,
+      "nervousness": 21,
+      "grief": 13,
+      "anger": 192,
+      "relief": 18,
+      "desire": 77,
+      "embarrassment": 35,
+      "pride": 15
+    },
+    "intent_counts": {
+      "parietal": 7,
+      "amygdala": 72,
+      "prefrontal": 20,
+      "temporal_r": 20,
+      "temporal_l": 9,
+      "motor": 3,
+      "occipital": 4,
+      "broca": 2
+    },
+    "neutral_examples": 3585
+  },
+  "test": {
+    "examples": 7580,
+    "sources": {
+      "MultiNLI": 2201,
+      "GoEmotions": 5379
+    },
+    "label_sources": {
+      "semantic_weak_label": 2201,
+      "human_annotation_mapped": 5379
+    },
+    "region_counts": {
+      "amygdala": 3864,
+      "prefrontal": 580,
+      "temporal_r": 73,
+      "brainstem": 1,
+      "occipital": 11,
+      "temporal_l": 13,
+      "parietal": 6,
+      "broca": 3,
+      "cerebellum": 1,
+      "motor": 1
+    },
+    "emotion_counts": {
+      "neutral": 1775,
+      "admiration": 500,
+      "gratitude": 340,
+      "excitement": 99,
+      "approval": 349,
+      "optimism": 185,
+      "curiosity": 283,
+      "joy": 160,
+      "disapproval": 267,
+      "surprise": 141,
+      "nervousness": 23,
+      "amusement": 264,
+      "anger": 198,
+      "confusion": 153,
+      "disappointment": 151,
+      "annoyance": 320,
+      "desire": 83,
+      "disgust": 122,
+      "grief": 5,
+      "sadness": 154,
+      "fear": 77,
+      "remorse": 56,
+      "caring": 133,
+      "love": 231,
+      "realization": 145,
+      "embarrassment": 37,
+      "pride": 16,
+      "relief": 11
+    },
+    "intent_counts": {
+      "prefrontal": 27,
+      "temporal_r": 73,
+      "amygdala": 79,
+      "brainstem": 1,
+      "occipital": 11,
+      "temporal_l": 13,
+      "parietal": 6,
+      "broca": 3,
+      "cerebellum": 1,
+      "motor": 1
+    },
+    "neutral_examples": 3594
+  }
+}

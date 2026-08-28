@@ -1,0 +1,72 @@
+{
+  "format": "JSON Lines",
+  "task": "multi-label emotion and semantic-intent classification for illustrative brain-region mapping",
+  "emotion_labels": [
+    "admiration",
+    "amusement",
+    "anger",
+    "annoyance",
+    "approval",
+    "caring",
+    "confusion",
+    "curiosity",
+    "desire",
+    "disappointment",
+    "disapproval",
+    "disgust",
+    "embarrassment",
+    "excitement",
+    "fear",
+    "gratitude",
+    "grief",
+    "joy",
+    "love",
+    "nervousness",
+    "optimism",
+    "pride",
+    "realization",
+    "relief",
+    "remorse",
+    "sadness",
+    "surprise",
+    "neutral"
+  ],
+  "intent_labels": [
+    "prefrontal",
+    "broca",
+    "motor",
+    "parietal",
+    "occipital",
+    "temporal_l",
+    "temporal_r",
+    "amygdala",
+    "cerebellum",
+    "brainstem"
+  ],
+  "contextual_regions": [
+    "prefrontal",
+    "broca",
+    "motor",
+    "parietal",
+    "occipital",
+    "temporal_l",
+    "temporal_r",
+    "amygdala",
+    "cerebellum",
+    "brainstem"
+  ],
+  "automatic_runtime_baseline": [
+    "temporal_l"
+  ],
+  "fields": {
+    "id": "Stable source-derived identifier",
+    "text": "Input utterance",
+    "emotions": "Original human-annotated emotion labels",
+    "intents": "Semantic weak intent labels",
+    "regions": "Legacy derived labels retained for compatibility",
+    "primary_intent": "Human-readable primary intent",
+    "label_source": "Human mapping or semantic weak label",
+    "sample_weight": "Recommended training loss weight",
+    "source": "Dataset provenance"
+  }
+}
