@@ -484,6 +484,18 @@ class LayeredNlpClassifier:
         self.max_emotions = int(
             inference_config.get("max_emotions", 5)
         )
+        self.relative_fallback_min_confidence = float(
+            inference_config.get(
+                "relative_fallback_min_confidence",
+                0.72,
+            )
+        )
+        self.relative_fallback_band = float(
+            inference_config.get("relative_fallback_band", 0.06)
+        )
+        self.max_relative_fallback_emotions = int(
+            inference_config.get("max_relative_fallback_emotions", 3)
+        )
         self.intent_classifier = SemanticIntentClassifier(encoder_name)
         self.model = self.intent_classifier.model
         self.model_name = "empwave-emotions-v2+semantic-intents"
@@ -507,6 +519,7 @@ class LayeredNlpClassifier:
             convert_to_numpy=True,
         )
         detected = []
+        candidates = []
         neutral = None
         for emotion_id in self.emotion_labels:
             probabilities = self._predict_probabilities(
@@ -545,8 +558,10 @@ class LayeredNlpClassifier:
             }
             if emotion_id == "neutral":
                 neutral = result
-            elif probability >= threshold:
-                detected.append(result)
+            else:
+                candidates.append(result)
+                if probability >= threshold:
+                    detected.append(result)
 
         detected.sort(key=lambda emotion: -emotion["score"])
         if neutral and neutral["score"] >= neutral["threshold"]:
@@ -563,6 +578,36 @@ class LayeredNlpClassifier:
             return detected[:self.max_emotions]
         if neutral and neutral["score"] >= neutral["threshold"]:
             return [neutral]
+        relative_candidates = [
+            emotion
+            for emotion in candidates
+            if emotion["score"] >= self.relative_fallback_min_confidence
+        ]
+        if relative_candidates:
+            relative_candidates.sort(
+                key=lambda emotion: -emotion["score"]
+            )
+            best_score = relative_candidates[0]["score"]
+            return [
+                {
+                    **emotion,
+                    "inference_mode": "relative_confidence",
+                    "salience": round(
+                        (
+                            emotion["score"]
+                            - self.relative_fallback_min_confidence
+                        )
+                        / max(
+                            1.0 - self.relative_fallback_min_confidence,
+                            0.01,
+                        ),
+                        4,
+                    ),
+                }
+                for emotion in relative_candidates
+                if emotion["score"]
+                >= best_score - self.relative_fallback_band
+            ][:self.max_relative_fallback_emotions]
         return []
 
     @staticmethod

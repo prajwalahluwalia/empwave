@@ -206,12 +206,12 @@
     gap:12px;
   }
   .intent-inspector-label{
-    font-size:10.5px; letter-spacing:.18em;
+    font-size:12.5px; letter-spacing:.18em;
     color:#fff; opacity:.68; text-transform:uppercase;
   }
   #nlpState{
     display:flex; align-items:center; gap:6px;
-    font-size:9.5px; letter-spacing:.1em;
+    font-size:11.5px; letter-spacing:.1em;
     color:var(--intent-color); text-transform:uppercase;
   }
   #nlpState::before{
@@ -223,21 +223,21 @@
   #nlpPrimary{
     margin-top:10px; color:#fff;
     font-family:'Space Grotesk',sans-serif;
-    font-size:18px; font-weight:600; line-height:1.2;
+    font-size:20px; font-weight:600; line-height:1.2;
   }
   #nlpMeta{
-    margin-top:4px; font-size:10.5px; line-height:1.45;
+    margin-top:4px; font-size:12.5px; line-height:1.45;
     color:var(--intent-color);
   }
   #nlpReason{
-    margin-top:8px; font-size:10.5px; line-height:1.5;
+    margin-top:8px; font-size:12.5px; line-height:1.5;
     color:#fff; opacity:.7;
   }
   #nlpEvidence{
     margin-top:7px; padding:7px 8px;
     border:1px solid rgba(140,170,255,.1);
     border-radius:8px; background:rgba(140,170,255,.04);
-    color:#fff; opacity:.82; font-size:10.5px; line-height:1.4;
+    color:#fff; opacity:.82; font-size:12.5px; line-height:1.4;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   #nlpSignals{
@@ -248,7 +248,7 @@
     flex:0 0 100%;
     margin-top:3px;
     color:#fff; opacity:.42;
-    font-size:8px; letter-spacing:.13em;
+    font-size:10px; letter-spacing:.13em;
     text-transform:uppercase;
   }
   .nlp-signal{
@@ -256,7 +256,7 @@
     padding:4px 6px; border-radius:6px;
     background:rgba(140,170,255,.05);
     border:1px solid rgba(140,170,255,.1);
-    color:#fff; opacity:.82; font-size:9px;
+    color:#fff; opacity:.82; font-size:11px;
   }
   .nlp-signal::before{
     content:''; width:5px; height:5px; border-radius:50%;
@@ -264,7 +264,7 @@
     box-shadow:0 0 6px var(--signal-color);
   }
   #nlpModel{
-    margin-top:9px; font-size:8.5px; letter-spacing:.06em;
+    margin-top:9px; font-size:10.5px; letter-spacing:.06em;
     color:#fff; opacity:.38;
   }
 
@@ -373,7 +373,7 @@
 
 <div id="stage"></div>
 
-<div class="eyebrow"><span class="dot"></span>NEURAL WIREFRAME · LIVE MODEL</div>
+<div class="eyebrow"><span class="dot"></span>EMPWAVE - NEURAL WIREFRAME · LIVE MODEL</div>
 <div class="title-block">
   <h1>DIGITAL&nbsp;BRAIN</h1>
   <p>Drag to rotate the model. Type a sentence below to detect its emotions and intent, then watch their combined region mapping.</p>
@@ -390,15 +390,13 @@
 
 <aside id="intentInspector" aria-live="polite">
   <div class="intent-inspector-head">
-    <div class="intent-inspector-label">NLP interpretation</div>
+    <div class="intent-inspector-label">EMPWAVE</div>
     <div id="nlpState">Ready</div>
   </div>
-  <div id="nlpPrimary">Awaiting analysis</div>
-  <div id="nlpMeta">Submit a sentence to inspect its emotions and intent.</div>
-  <div id="nlpReason">The local models will show how their evidence maps to each region.</div>
+  <div id="nlpPrimary">Emotion Analysis</div>
+  <div id="nlpReason">Wait until we get the evidence maps to each region.</div>
   <div id="nlpEvidence">No evidence clause yet</div>
   <div id="nlpSignals"></div>
-  <div id="nlpModel">MODEL · ALL-MINILM-L6-V2</div>
 </aside>
 
 <div id="legendModal" role="dialog" aria-modal="true" aria-labelledby="legendTitle" aria-hidden="true">
@@ -1200,12 +1198,12 @@ function updateBrainHover(e){
   }
 
   hoverRotationTarget.set(
-    hoverPointer.y*0.045,
-    hoverPointer.x*0.065
+    hoverPointer.y*0.054,
+    hoverPointer.x*0.078
   );
   hoverPositionTarget.set(
-    hoverPointer.x*0.025,
-    hoverPointer.y*0.015
+    hoverPointer.x*0.03,
+    hoverPointer.y*0.018
   );
 }
 
@@ -1548,10 +1546,10 @@ function animate(t){
   lastFrameTime = now;
   let hasActiveRegion=false;
 
-  brainHoverGroup.rotation.x+=(hoverRotationTarget.x-brainHoverGroup.rotation.x)*0.075;
-  brainHoverGroup.rotation.y+=(hoverRotationTarget.y-brainHoverGroup.rotation.y)*0.075;
-  brainHoverGroup.position.x+=(hoverPositionTarget.x-brainHoverGroup.position.x)*0.075;
-  brainHoverGroup.position.y+=(hoverPositionTarget.y-brainHoverGroup.position.y)*0.075;
+  brainHoverGroup.rotation.x+=(hoverRotationTarget.x-brainHoverGroup.rotation.x)*0.0825;
+  brainHoverGroup.rotation.y+=(hoverRotationTarget.y-brainHoverGroup.rotation.y)*0.0825;
+  brainHoverGroup.position.x+=(hoverPositionTarget.x-brainHoverGroup.position.x)*0.0825;
+  brainHoverGroup.position.y+=(hoverPositionTarget.y-brainHoverGroup.position.y)*0.0825;
 
   REGIONS.forEach(r=>{
     const rec = markers[r.id];

@@ -20,6 +20,9 @@ RUNTIME_MIN_CONFIDENCE = 0.93
 NEUTRAL_COMPETITION_MARGIN = 0.15
 NEUTRAL_OVERRIDE_CONFIDENCE = 0.95
 MAX_RUNTIME_EMOTIONS = 5
+RELATIVE_FALLBACK_MIN_CONFIDENCE = 0.72
+RELATIVE_FALLBACK_BAND = 0.06
+MAX_RELATIVE_FALLBACK_EMOTIONS = 3
 
 
 def parse_args():
@@ -212,6 +215,26 @@ def runtime_predictions(probabilities, thresholds, labels):
                     >= row[neutral_index] + NEUTRAL_COMPETITION_MARGIN
                 )
             ]
+        if not detected and not neutral_active:
+            candidates = [
+                index
+                for index, probability in enumerate(row)
+                if (
+                    index != neutral_index
+                    and probability >= RELATIVE_FALLBACK_MIN_CONFIDENCE
+                )
+            ]
+            if candidates:
+                candidates.sort(
+                    key=lambda index: row[index],
+                    reverse=True,
+                )
+                best_probability = max(row[index] for index in candidates)
+                detected = [
+                    index
+                    for index in candidates
+                    if row[index] >= best_probability - RELATIVE_FALLBACK_BAND
+                ][:MAX_RELATIVE_FALLBACK_EMOTIONS]
         detected.sort(key=lambda index: row[index], reverse=True)
         detected = detected[:MAX_RUNTIME_EMOTIONS]
         if detected:
@@ -392,6 +415,13 @@ def main():
             "neutral_competition_margin": NEUTRAL_COMPETITION_MARGIN,
             "neutral_override_confidence": NEUTRAL_OVERRIDE_CONFIDENCE,
             "max_emotions": MAX_RUNTIME_EMOTIONS,
+            "relative_fallback_min_confidence": (
+                RELATIVE_FALLBACK_MIN_CONFIDENCE
+            ),
+            "relative_fallback_band": RELATIVE_FALLBACK_BAND,
+            "max_relative_fallback_emotions": (
+                MAX_RELATIVE_FALLBACK_EMOTIONS
+            ),
         },
         "labels": labels,
         "thresholds": {

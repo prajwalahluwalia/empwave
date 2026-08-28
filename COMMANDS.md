@@ -1,4 +1,4 @@
-# 🔧 Empwave - Essential Commands Reference
+# 🔧 SynapseView - Essential Commands Reference
 
 ## 🚀 Starting the Application
 
@@ -12,7 +12,7 @@ python3 app.py
 ```
 * Serving Flask app 'app'
 * Debug mode: on
-* Running on http://127.0.0.1:5007
+* Running on http://127.0.0.1:5007/model
 * Press CTRL+C to quit
 ```
 
@@ -335,7 +335,7 @@ brew install heroku
 heroku login
 
 # Create app
-heroku create empwave-app
+heroku create synapseview-app
 
 # Deploy
 git push heroku main
@@ -438,7 +438,7 @@ cat /Users/prajwalahluwalia/Desktop/empwave/QUICKSTART.txt
 cat /Users/prajwalahluwalia/Desktop/empwave/SETUP.md
 
 # Summary
-cat /Users/prajwalahluwalia/Desktop/empwave/EMPWAVE_SUMMARY.md
+cat /Users/prajwalahluwalia/Desktop/empwave/SYNAPSEVIEW_SUMMARY.md
 
 # This file
 cat /Users/prajwalahluwalia/Desktop/empwave/COMMANDS.md
@@ -471,7 +471,7 @@ git status
 ### Add and Commit Changes
 ```bash
 git add .
-git commit -m "Update Empwave"
+git commit -m "Update SynapseView"
 ```
 
 ### View Commit History
@@ -491,20 +491,20 @@ git checkout -b feature-name
 ### Backup Project
 ```bash
 # Compress entire project
-tar -czf empwave-backup.tar.gz /Users/prajwalahluwalia/Desktop/empwave/
+tar -czf synapseview-backup.tar.gz /Users/prajwalahluwalia/Desktop/empwave/
 
 # Or use zip
-zip -r empwave-backup.zip /Users/prajwalahluwalia/Desktop/empwave/
+zip -r synapseview-backup.zip /Users/prajwalahluwalia/Desktop/empwave/
 ```
 
 ### List Backup
 ```bash
-tar -tzf empwave-backup.tar.gz | head -20
+tar -tzf synapseview-backup.tar.gz | head -20
 ```
 
 ### Restore from Backup
 ```bash
-tar -xzf empwave-backup.tar.gz
+tar -xzf synapseview-backup.tar.gz
 ```
 
 ---
@@ -553,3 +553,4 @@ man lsof
 ---
 
 **Save this file as a quick reference!** 🚀
+

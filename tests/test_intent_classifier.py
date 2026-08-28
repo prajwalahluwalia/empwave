@@ -93,6 +93,17 @@ class SemanticIntentClassifierTests(unittest.TestCase):
             "amygdala",
         )
 
+    def test_short_negative_judgment_uses_relative_emotion_evidence(self):
+        result = self.classifier.classify("Ashlay sucks")
+        self.assertEqual(
+            [region["id"] for region in result["regions"]],
+            ["temporal_l", "amygdala", "prefrontal"],
+        )
+        self.assertEqual(
+            {emotion["id"] for emotion in result["emotions"]},
+            {"disgust", "disappointment", "anger"},
+        )
+
     def test_mixed_emotions_are_detected_independently(self):
         result = self.classifier.classify(
             "I feel happy but nervous about starting my new job"

@@ -2,7 +2,7 @@
   "metadata": {
     "artifact_version": 2,
     "task": "multi_label_emotion_classification",
-    "created_at": "2026-08-28T15:38:00.921541+00:00",
+    "created_at": "2026-08-28T15:48:46.861640+00:00",
     "encoder": "sentence-transformers/all-MiniLM-L6-v2",
     "inference": {
       "clause_max": true,
@@ -10,7 +10,10 @@
       "neutral_uses_full_text": true,
       "neutral_competition_margin": 0.15,
       "neutral_override_confidence": 0.95,
-      "max_emotions": 5
+      "max_emotions": 5,
+      "relative_fallback_min_confidence": 0.72,
+      "relative_fallback_band": 0.06,
+      "max_relative_fallback_emotions": 3
     },
     "labels": [
       "admiration",
@@ -822,231 +825,231 @@
   },
   "test_metrics": {
     "micro": {
-      "precision": 0.4354,
-      "recall": 0.4736,
-      "f1": 0.4537
+      "precision": 0.4032,
+      "recall": 0.5134,
+      "f1": 0.4517
     },
     "macro": {
-      "precision": 0.3314,
-      "recall": 0.4696,
-      "f1": 0.3559
+      "precision": 0.3079,
+      "recall": 0.5112,
+      "f1": 0.3556
     },
     "per_emotion": {
       "admiration": {
         "positives": 500,
-        "predicted_positives": 440,
+        "predicted_positives": 563,
         "threshold": 0.93,
-        "precision": 0.5023,
-        "recall": 0.442,
-        "f1": 0.4702
+        "precision": 0.5027,
+        "recall": 0.566,
+        "f1": 0.5325
       },
       "amusement": {
         "positives": 264,
-        "predicted_positives": 300,
+        "predicted_positives": 329,
         "threshold": 0.93,
-        "precision": 0.7033,
-        "recall": 0.7992,
-        "f1": 0.7482
+        "precision": 0.6839,
+        "recall": 0.8523,
+        "f1": 0.7589
       },
       "anger": {
         "positives": 198,
-        "predicted_positives": 185,
+        "predicted_positives": 249,
         "threshold": 0.95,
-        "precision": 0.4162,
-        "recall": 0.3889,
-        "f1": 0.4021
+        "precision": 0.3695,
+        "recall": 0.4646,
+        "f1": 0.4116
       },
       "annoyance": {
         "positives": 320,
-        "predicted_positives": 96,
+        "predicted_positives": 156,
         "threshold": 0.93,
-        "precision": 0.3125,
-        "recall": 0.0938,
-        "f1": 0.1442
+        "precision": 0.3397,
+        "recall": 0.1656,
+        "f1": 0.2227
       },
       "approval": {
         "positives": 349,
-        "predicted_positives": 141,
+        "predicted_positives": 188,
         "threshold": 0.93,
-        "precision": 0.4255,
-        "recall": 0.1719,
-        "f1": 0.2449
+        "precision": 0.3777,
+        "recall": 0.2034,
+        "f1": 0.2644
       },
       "caring": {
         "positives": 133,
-        "predicted_positives": 191,
+        "predicted_positives": 225,
         "threshold": 0.93,
-        "precision": 0.2775,
-        "recall": 0.3985,
-        "f1": 0.3272
+        "precision": 0.2489,
+        "recall": 0.4211,
+        "f1": 0.3128
       },
       "confusion": {
         "positives": 153,
-        "predicted_positives": 251,
+        "predicted_positives": 289,
         "threshold": 0.94,
-        "precision": 0.1952,
-        "recall": 0.3203,
-        "f1": 0.2426
+        "precision": 0.1834,
+        "recall": 0.3464,
+        "f1": 0.2398
       },
       "curiosity": {
         "positives": 283,
-        "predicted_positives": 297,
+        "predicted_positives": 338,
         "threshold": 0.93,
-        "precision": 0.229,
-        "recall": 0.2403,
-        "f1": 0.2345
+        "precision": 0.2308,
+        "recall": 0.2756,
+        "f1": 0.2512
       },
       "desire": {
         "positives": 83,
-        "predicted_positives": 163,
+        "predicted_positives": 197,
         "threshold": 0.95,
-        "precision": 0.2393,
-        "recall": 0.4699,
-        "f1": 0.3171
+        "precision": 0.2081,
+        "recall": 0.494,
+        "f1": 0.2929
       },
       "disappointment": {
         "positives": 151,
-        "predicted_positives": 132,
+        "predicted_positives": 190,
         "threshold": 0.93,
-        "precision": 0.2121,
-        "recall": 0.1854,
-        "f1": 0.1979
+        "precision": 0.1789,
+        "recall": 0.2252,
+        "f1": 0.1994
       },
       "disapproval": {
         "positives": 267,
-        "predicted_positives": 274,
+        "predicted_positives": 339,
         "threshold": 0.93,
-        "precision": 0.2774,
-        "recall": 0.2846,
-        "f1": 0.281
+        "precision": 0.2655,
+        "recall": 0.3371,
+        "f1": 0.297
       },
       "disgust": {
         "positives": 122,
-        "predicted_positives": 156,
+        "predicted_positives": 215,
         "threshold": 0.95,
-        "precision": 0.3654,
-        "recall": 0.4672,
-        "f1": 0.4101
+        "precision": 0.2837,
+        "recall": 0.5,
+        "f1": 0.362
       },
       "embarrassment": {
         "positives": 37,
-        "predicted_positives": 126,
+        "predicted_positives": 176,
         "threshold": 0.95,
-        "precision": 0.1111,
-        "recall": 0.3784,
-        "f1": 0.1718
+        "precision": 0.0852,
+        "recall": 0.4054,
+        "f1": 0.1408
       },
       "excitement": {
         "positives": 99,
-        "predicted_positives": 212,
+        "predicted_positives": 259,
         "threshold": 0.93,
-        "precision": 0.1792,
-        "recall": 0.3838,
-        "f1": 0.2444
+        "precision": 0.1737,
+        "recall": 0.4545,
+        "f1": 0.2514
       },
       "fear": {
         "positives": 77,
-        "predicted_positives": 177,
+        "predicted_positives": 202,
         "threshold": 0.94,
-        "precision": 0.3051,
-        "recall": 0.7013,
-        "f1": 0.4252
+        "precision": 0.2772,
+        "recall": 0.7273,
+        "f1": 0.4014
       },
       "gratitude": {
         "positives": 340,
-        "predicted_positives": 363,
+        "predicted_positives": 385,
         "threshold": 0.95,
-        "precision": 0.8209,
-        "recall": 0.8765,
-        "f1": 0.8478
+        "precision": 0.7922,
+        "recall": 0.8971,
+        "f1": 0.8414
       },
       "grief": {
         "positives": 5,
-        "predicted_positives": 42,
+        "predicted_positives": 43,
         "threshold": 0.94,
-        "precision": 0.119,
+        "precision": 0.1163,
         "recall": 1.0,
-        "f1": 0.2128
+        "f1": 0.2083
       },
       "joy": {
         "positives": 160,
-        "predicted_positives": 192,
+        "predicted_positives": 238,
         "threshold": 0.94,
-        "precision": 0.4167,
-        "recall": 0.5,
-        "f1": 0.4545
+        "precision": 0.3866,
+        "recall": 0.575,
+        "f1": 0.4623
       },
       "love": {
         "positives": 231,
-        "predicted_positives": 242,
+        "predicted_positives": 295,
         "threshold": 0.95,
-        "precision": 0.7025,
-        "recall": 0.7359,
-        "f1": 0.7188
+        "precision": 0.6441,
+        "recall": 0.8225,
+        "f1": 0.7224
       },
       "nervousness": {
         "positives": 23,
-        "predicted_positives": 104,
+        "predicted_positives": 123,
         "threshold": 0.95,
-        "precision": 0.1154,
+        "precision": 0.0976,
         "recall": 0.5217,
-        "f1": 0.189
+        "f1": 0.1644
       },
       "optimism": {
         "positives": 185,
-        "predicted_positives": 223,
+        "predicted_positives": 260,
         "threshold": 0.93,
-        "precision": 0.426,
-        "recall": 0.5135,
-        "f1": 0.4657
+        "precision": 0.3846,
+        "recall": 0.5405,
+        "f1": 0.4494
       },
       "pride": {
         "positives": 16,
-        "predicted_positives": 53,
+        "predicted_positives": 73,
         "threshold": 0.95,
-        "precision": 0.1132,
+        "precision": 0.0822,
         "recall": 0.375,
-        "f1": 0.1739
+        "f1": 0.1348
       },
       "realization": {
         "positives": 145,
-        "predicted_positives": 86,
+        "predicted_positives": 134,
         "threshold": 0.93,
-        "precision": 0.1977,
-        "recall": 0.1172,
-        "f1": 0.1472
+        "precision": 0.1716,
+        "recall": 0.1586,
+        "f1": 0.1649
       },
       "relief": {
         "positives": 11,
-        "predicted_positives": 114,
+        "predicted_positives": 139,
         "threshold": 0.93,
-        "precision": 0.0439,
+        "precision": 0.036,
         "recall": 0.4545,
-        "f1": 0.08
+        "f1": 0.0667
       },
       "remorse": {
         "positives": 56,
-        "predicted_positives": 143,
+        "predicted_positives": 166,
         "threshold": 0.95,
-        "precision": 0.3357,
-        "recall": 0.8571,
-        "f1": 0.4824
+        "precision": 0.3193,
+        "recall": 0.9464,
+        "f1": 0.4775
       },
       "sadness": {
         "positives": 154,
-        "predicted_positives": 228,
+        "predicted_positives": 275,
         "threshold": 0.95,
-        "precision": 0.3333,
-        "recall": 0.4935,
-        "f1": 0.3979
+        "precision": 0.3164,
+        "recall": 0.5649,
+        "f1": 0.4056
       },
       "surprise": {
         "positives": 141,
-        "predicted_positives": 185,
+        "predicted_positives": 236,
         "threshold": 0.93,
-        "precision": 0.3027,
-        "recall": 0.3972,
-        "f1": 0.3436
+        "precision": 0.2627,
+        "recall": 0.4397,
+        "f1": 0.3289
       },
       "neutral": {
         "positives": 1775,
