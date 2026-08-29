@@ -2,7 +2,7 @@ name: Keep Empwave Alive
 
 on:
   schedule:
-    - cron: '*/0.5 * * * *'  # Every 30 seconds
+    - cron: '*/5 * * * *'  # Every 5 minutes (GitHub minimum)
   workflow_dispatch:
 
 jobs:
