@@ -11,5 +11,9 @@ jobs:
     steps:
       - name: Ping health endpoint
         run: |
-          curl -f https://empwave.onrender.com/health || exit 1
-        timeout-minutes: 1
+          echo "Pinging Render health endpoint..."
+          curl -v "${{ secrets.RENDER_APP_URL }}/health" || echo "⚠️ First ping failed, retrying..."
+          sleep 5
+          curl -f "${{ secrets.RENDER_APP_URL }}/health" || exit 1
+        timeout-minutes: 2
+        continue-on-error: true
