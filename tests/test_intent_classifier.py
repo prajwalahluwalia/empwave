@@ -1,6 +1,12 @@
+import json
+import sqlite3
+import tempfile
 import unittest
+from contextlib import closing
+from pathlib import Path
 
 from app import app
+from empwave.services.feedback_store import FeedbackStore
 from empwave.services.intent_classifier import get_classifier
 
 
@@ -142,7 +148,16 @@ class SemanticIntentClassifierTests(unittest.TestCase):
 
 class ProcessSpeechApiTests(unittest.TestCase):
     def setUp(self):
+        self.temporary_directory = tempfile.TemporaryDirectory()
+        app.config["ENABLE_EMOTION_FEEDBACK"] = True
+        app.config["FEEDBACK_DB_PATH"] = str(
+            Path(self.temporary_directory.name) / "feedback.sqlite3"
+        )
         self.client = app.test_client()
+
+    def tearDown(self):
+        app.config["ENABLE_EMOTION_FEEDBACK"] = False
+        self.temporary_directory.cleanup()
 
     def test_process_speech_returns_structured_nlp_result(self):
         response = self.client.post(
@@ -174,6 +189,109 @@ class ProcessSpeechApiTests(unittest.TestCase):
 
     def test_process_speech_rejects_empty_text(self):
         response = self.client.post("/api/process-speech", json={"text": " "})
+        self.assertEqual(response.status_code, 400)
+
+    def test_emotion_feedback_requires_consent(self):
+        response = self.client.post(
+            "/api/emotion-feedback",
+            json={
+                "text": "I feel nervous",
+                "selected_emotions": ["nervousness"],
+                "consent": False,
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("consent", response.get_json()["message"].lower())
+
+    def test_emotion_feedback_can_be_disabled(self):
+        app.config["ENABLE_EMOTION_FEEDBACK"] = False
+        response = self.client.post(
+            "/api/emotion-feedback",
+            json={
+                "text": "I feel nervous",
+                "selected_emotions": ["nervousness"],
+                "consent": True,
+            },
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_emotion_feedback_is_stored_for_review(self):
+        response = self.client.post(
+            "/api/emotion-feedback",
+            json={
+                "text": "I feel happy but nervous",
+                "selected_emotions": ["joy", "nervousness"],
+                "consent": True,
+            },
+        )
+        self.assertEqual(response.status_code, 201)
+        payload = response.get_json()
+        self.assertEqual(payload["status"], "success")
+
+        with closing(
+            sqlite3.connect(app.config["FEEDBACK_DB_PATH"])
+        ) as connection:
+            record = connection.execute(
+                """
+                SELECT perspective, selected_emotions, moderation_status
+                FROM emotion_feedback
+                WHERE id = ?
+                """,
+                (payload["feedback_id"],),
+            ).fetchone()
+        self.assertEqual(record[0], "speaker_self_report")
+        self.assertEqual(
+            json.loads(record[1]),
+            ["joy", "nervousness"],
+        )
+        self.assertIn(
+            record[2],
+            {"pending_review", "priority_review"},
+        )
+        FeedbackStore(app.config["FEEDBACK_DB_PATH"]).review(
+            payload["feedback_id"],
+            "approved",
+            "Verified self-report.",
+        )
+        with closing(
+            sqlite3.connect(app.config["FEEDBACK_DB_PATH"])
+        ) as connection:
+            reviewed_status = connection.execute(
+                """
+                SELECT moderation_status FROM emotion_feedback
+                WHERE id = ?
+                """,
+                (payload["feedback_id"],),
+            ).fetchone()[0]
+        self.assertEqual(reviewed_status, "approved")
+
+    def test_duplicate_feedback_is_flagged_not_auto_accepted(self):
+        submission = {
+            "text": "This situation makes me angry",
+            "selected_emotions": ["anger"],
+            "consent": True,
+        }
+        first = self.client.post("/api/emotion-feedback", json=submission)
+        second = self.client.post("/api/emotion-feedback", json=submission)
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(second.status_code, 201)
+        payload = second.get_json()
+        self.assertEqual(payload["status"], "success")
+        self.assertIn(
+            "duplicate_feedback",
+            payload["moderation_flags"],
+        )
+        self.assertEqual(payload["moderation_status"], "priority_review")
+
+    def test_neutral_cannot_be_combined_with_other_emotions(self):
+        response = self.client.post(
+            "/api/emotion-feedback",
+            json={
+                "text": "I am uncertain",
+                "selected_emotions": ["neutral", "confusion"],
+                "consent": True,
+            },
+        )
         self.assertEqual(response.status_code, 400)
 
 

@@ -44,3 +44,7 @@ split. Outputs are:
 The dataset has very few positive examples for some anatomical regions, so
 their individual metrics are expected to be unstable until more reviewed
 training examples are added.
+
+Consented user corrections are not part of this dataset automatically. They
+remain in `data/feedback/empwave_feedback.sqlite3` until a reviewer approves
+or rejects them with `scripts/review_feedback.py`.

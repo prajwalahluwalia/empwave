@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: empwave
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python scripts/cache_model.py
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 120 --access-logfile - --error-logfile - app:app
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.7
+      - key: TOKENIZERS_PARALLELISM
+        value: "false"
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: MKL_NUM_THREADS
+        value: "1"

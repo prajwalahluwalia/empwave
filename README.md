@@ -82,6 +82,42 @@ logistic classifier for every GoEmotions label. Semantic intents remain a
 separate layer, and the runtime maps both layers to brain regions. The model
 artifact and test metrics are written to `models/trained/`.
 
+## Emotion feedback review
+
+This feature is currently disabled by default.
+
+After a simulation, users can select **Review detected emotions** and submit a
+consented self-report. Feedback is stored separately in
+`data/feedback/empwave_feedback.sqlite3`; it never retrains the model
+automatically. Duplicate, unusually broad, repeated, and strong-disagreement
+submissions are flagged for review rather than treated as malicious by default.
+
+```bash
+EMPWAVE_ENABLE_EMOTION_FEEDBACK=1 python app.py
+
+python scripts/review_feedback.py list
+python scripts/review_feedback.py approve 12 --note "Verified correction"
+python scripts/review_feedback.py reject 13 --note "Spam submission"
+```
+
+## Deploy on Render
+
+The repository includes `render.yaml`. Deploy it as a Render Blueprint, or use
+these settings for a manual Web Service:
+
+```text
+Build Command:
+pip install -r requirements.txt && python scripts/cache_model.py
+
+Start Command:
+gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 120 app:app
+```
+
+Leave **Root Directory** empty. Use one worker because the loaded NLP model uses
+roughly 344MB locally and Render's free instance provides 512MB. The trained
+artifact at `models/trained/empwave_classifier.joblib` must be committed and
+pushed with the application.
+
 ### Keyboard Shortcuts
 
 - **Enter** - Speak the text

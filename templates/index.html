@@ -188,7 +188,10 @@
   #intentInspector{
     --intent-color:var(--accent-cyan);
     position:fixed; right:32px; bottom:28px; z-index:7;
-    width:310px;
+    width:350px;
+    height:480px;
+    overflow-y:auto;
+    overscroll-behavior:contain;
     padding:15px 16px;
     background:
       radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--intent-color) 14%,transparent),transparent 42%),
@@ -200,6 +203,15 @@
     box-shadow:0 18px 55px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);
     font-family:'IBM Plex Mono',monospace;
     transition:border-color .25s ease,background .25s ease;
+  }
+  #intentInspector::-webkit-scrollbar{ width:5px; }
+  #intentInspector::-webkit-scrollbar-track{
+    background:rgba(140,170,255,.05);
+    border-radius:5px;
+  }
+  #intentInspector::-webkit-scrollbar-thumb{
+    background:color-mix(in srgb,var(--intent-color) 65%,transparent);
+    border-radius:5px;
   }
   .intent-inspector-head{
     display:flex; align-items:center; justify-content:space-between;
@@ -267,6 +279,98 @@
     margin-top:9px; font-size:10.5px; letter-spacing:.06em;
     color:#fff; opacity:.38;
   }
+  #emotionReviewBtn{
+    width:100%; margin-top:11px; padding:8px 10px;
+    border:1px solid color-mix(in srgb,var(--intent-color) 42%,transparent);
+    border-radius:8px; background:rgba(255,255,255,.035);
+    color:#fff; font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:.06em; cursor:pointer;
+  }
+  #emotionReviewBtn:hover{
+    background:color-mix(in srgb,var(--intent-color) 12%,transparent);
+  }
+  #emotionFeedbackState{
+    margin-top:7px; color:#fff; opacity:.58;
+    font-size:10px; line-height:1.45;
+  }
+
+  #emotionReviewModal{
+    position:fixed; inset:0; z-index:35;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px; background:rgba(3,4,18,.76);
+    backdrop-filter:blur(12px);
+    opacity:0; visibility:hidden; pointer-events:none;
+    transition:opacity .2s ease,visibility .2s ease;
+  }
+  #emotionReviewModal.open{
+    opacity:1; visibility:visible; pointer-events:auto;
+  }
+  .emotion-review-panel{
+    width:min(700px,calc(100vw - 32px));
+    max-height:calc(100vh - 48px); overflow-y:auto;
+    padding:22px;
+    background:rgba(10,12,34,.96);
+    border:1px solid rgba(140,170,255,.24);
+    border-radius:16px;
+    box-shadow:0 28px 90px rgba(0,0,0,.62);
+  }
+  .emotion-review-head{
+    display:flex; justify-content:space-between; gap:18px;
+  }
+  .emotion-review-head h2{
+    margin:5px 0 0; font-size:24px;
+  }
+  .emotion-review-copy{
+    margin:8px 0 0; max-width:560px;
+    color:#fff; opacity:.7; font-size:13px; line-height:1.5;
+  }
+  #emotionReviewClose{
+    width:38px; height:38px; flex-shrink:0;
+    border:1px solid var(--panel-border); border-radius:9px;
+    background:transparent; color:#fff; cursor:pointer; font-size:20px;
+  }
+  #emotionReviewText{
+    margin-top:16px; padding:10px 12px;
+    border:1px solid rgba(140,170,255,.12); border-radius:9px;
+    color:#fff; opacity:.86; font-family:'IBM Plex Mono',monospace;
+    font-size:12px; line-height:1.5;
+  }
+  #emotionChoices{
+    display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:7px; margin-top:15px;
+  }
+  .emotion-choice input{ position:absolute; opacity:0; pointer-events:none; }
+  .emotion-choice span{
+    display:block; padding:8px 9px; border-radius:8px;
+    border:1px solid rgba(140,170,255,.13);
+    color:#fff; opacity:.66; font-size:11px; text-align:center;
+    cursor:pointer; transition:.15s ease;
+  }
+  .emotion-choice input:checked + span{
+    opacity:1; border-color:var(--accent-cyan);
+    background:rgba(91,233,255,.11);
+    box-shadow:inset 0 0 12px rgba(91,233,255,.08);
+  }
+  .emotion-consent{
+    display:flex; align-items:flex-start; gap:9px;
+    margin-top:16px; color:#fff; opacity:.72;
+    font-size:12px; line-height:1.5;
+  }
+  .emotion-consent input{ margin-top:3px; accent-color:var(--accent-cyan); }
+  .emotion-review-actions{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:14px; margin-top:16px;
+  }
+  #emotionReviewMessage{
+    color:#fff; opacity:.7; font-size:11px; line-height:1.4;
+  }
+  #emotionFeedbackSubmit{
+    flex-shrink:0; padding:10px 15px; border:0; border-radius:9px;
+    background:linear-gradient(135deg,var(--accent-violet),var(--accent-cyan));
+    color:#08091d; font-family:'IBM Plex Mono',monospace;
+    font-size:12px; cursor:pointer;
+  }
+  #emotionFeedbackSubmit:disabled{ opacity:.55; cursor:wait; }
 
   #legendModal{
     position:fixed; inset:0; z-index:30;
@@ -365,7 +469,9 @@
     #legendGrid{ grid-template-columns:1fr; }
     #intentInspector{
       left:16px; right:16px; bottom:142px; width:auto;
+      height:min(480px,calc(100vh - 174px));
     }
+    #emotionChoices{ grid-template-columns:repeat(2,minmax(0,1fr)); }
   }
 </style>
 </head>
@@ -394,10 +500,37 @@
     <div id="nlpState">Ready</div>
   </div>
   <div id="nlpPrimary">Emotion Analysis</div>
+  <div id="nlpMeta">Submit a sentence to inspect its emotions and intent.</div>
   <div id="nlpReason">Wait until we get the evidence maps to each region.</div>
   <div id="nlpEvidence">No evidence clause yet</div>
   <div id="nlpSignals"></div>
+  <div id="nlpModel">MODEL · EMPWAVE EMOTIONS + SEMANTIC INTENTS</div>
+  <button id="emotionReviewBtn" type="button" hidden>Review detected emotions</button>
+  <div id="emotionFeedbackState" hidden>Corrections require consent and human review.</div>
 </aside>
+
+<div id="emotionReviewModal" role="dialog" aria-modal="true" aria-labelledby="emotionReviewTitle" aria-hidden="true">
+  <section class="emotion-review-panel">
+    <header class="emotion-review-head">
+      <div>
+        <div class="legend-kicker">Self-reported speaker emotion</div>
+        <h2 id="emotionReviewTitle">Review detected emotions</h2>
+        <p class="emotion-review-copy">Choose what you actually felt. Your correction is stored separately for human review and never trains the model automatically.</p>
+      </div>
+      <button id="emotionReviewClose" type="button" aria-label="Close emotion review">&times;</button>
+    </header>
+    <div id="emotionReviewText"></div>
+    <div id="emotionChoices"></div>
+    <label class="emotion-consent">
+      <input id="emotionConsent" type="checkbox">
+      <span>I consent to storing this sentence and my selected emotions for model-quality review.</span>
+    </label>
+    <div class="emotion-review-actions">
+      <div id="emotionReviewMessage">Submissions stay pending until reviewed.</div>
+      <button id="emotionFeedbackSubmit" type="button">Submit for review</button>
+    </div>
+  </section>
+</div>
 
 <div id="legendModal" role="dialog" aria-modal="true" aria-labelledby="legendTitle" aria-hidden="true">
   <section class="legend-panel">
@@ -1084,6 +1217,7 @@ REGIONS.forEach(r=>{
     activeUntil:0,
     baseScale:0.075,
     lastEmit:0,
+    activeColor:null,
     edgeGlows:[],
     nervePaths:[]
   };
@@ -1137,7 +1271,7 @@ function spawnWaveParticles(rec, strength, count){
   const arbitrary = Math.abs(normal.y) < 0.9 ? new THREE.Vector3(0,1,0) : new THREE.Vector3(1,0,0);
   const tanA = new THREE.Vector3().crossVectors(normal, arbitrary).normalize();
   const tanB = new THREE.Vector3().crossVectors(normal, tanA).normalize();
-  const col = REGION_COLOR[rec.region.id] || [0.6,0.85,1.0];
+  const col = rec.activeColor || REGION_COLOR[rec.region.id] || [0.6,0.85,1.0];
 
   for(let i=0;i<count;i++){
     const idx = pCursor; pCursor = (pCursor+1) % MAX_PARTICLES;
@@ -1283,23 +1417,106 @@ const nlpReason = document.getElementById('nlpReason');
 const nlpEvidence = document.getElementById('nlpEvidence');
 const nlpSignals = document.getElementById('nlpSignals');
 const nlpModel = document.getElementById('nlpModel');
+const emotionReviewBtn = document.getElementById('emotionReviewBtn');
+const emotionFeedbackState = document.getElementById('emotionFeedbackState');
+const emotionReviewModal = document.getElementById('emotionReviewModal');
+const emotionReviewClose = document.getElementById('emotionReviewClose');
+const emotionReviewText = document.getElementById('emotionReviewText');
+const emotionChoices = document.getElementById('emotionChoices');
+const emotionConsent = document.getElementById('emotionConsent');
+const emotionReviewMessage = document.getElementById('emotionReviewMessage');
+const emotionFeedbackSubmit = document.getElementById('emotionFeedbackSubmit');
+const EMOTION_FEEDBACK_ENABLED={{ emotion_feedback_enabled|tojson }};
+let latestAnalysis=null;
+let latestAnalyzedText='';
 
 function regionColorCss(id){
   const c = REGION_COLOR[id] || [0.6,0.85,1.0];
   return `rgb(${Math.round(c[0]*255)},${Math.round(c[1]*255)},${Math.round(c[2]*255)})`;
 }
 
+function emotionColorArray(id){
+  const emotionColors={
+    anger:[1.0,0.08,0.05],
+    desire:[1.0,0.08,0.05],
+    love:[1.0,0.08,0.05],
+    sadness:[0.12,0.62,1.0],
+    grief:[0.12,0.62,1.0],
+    disappointment:[0.12,0.62,1.0],
+    remorse:[0.12,0.62,1.0],
+    joy:[1.0,0.92,0.08],
+    amusement:[1.0,0.92,0.08],
+    optimism:[1.0,0.92,0.08],
+    nervousness:[1.0,0.92,0.08],
+    approval:[0.08,1.0,0.42],
+    caring:[0.08,1.0,0.42],
+    gratitude:[0.08,1.0,0.42],
+    relief:[1.0,1.0,1.0],
+    confusion:[0.74,0.24,1.0],
+    curiosity:[0.74,0.24,1.0],
+    realization:[0.74,0.24,1.0],
+    surprise:[0.74,0.24,1.0],
+    fear:[0.74,0.24,1.0],
+    admiration:[1.0,0.42,0.04],
+    excitement:[1.0,0.42,0.04],
+    pride:[1.0,0.42,0.04],
+    annoyance:[1.0,0.42,0.04],
+    disapproval:[1.0,0.42,0.04],
+    disgust:[0.08,1.0,0.42],
+    embarrassment:[0.12,0.62,1.0],
+    neutral:[1.0,1.0,1.0]
+  };
+  return emotionColors[id] || [1.0,1.0,1.0];
+}
+
+function colorArrayCss(color){
+  return `rgb(${Math.round(color[0]*255)},${Math.round(color[1]*255)},${Math.round(color[2]*255)})`;
+}
+
 function emotionColorCss(id){
-  if(['anger','annoyance','disappointment','disapproval','disgust','fear','grief','remorse','sadness'].includes(id)){
-    return 'rgb(255,92,76)';
+  return colorArrayCss(emotionColorArray(id));
+}
+
+function emotionRegionShade(baseColor,regionId){
+  const shadeByRegion={
+    prefrontal:0.38,
+    broca:0.22,
+    motor:-0.12,
+    parietal:0.28,
+    occipital:0.48,
+    temporal_l:0.55,
+    temporal_r:-0.28,
+    amygdala:0,
+    cerebellum:0.14,
+    brainstem:-0.16
+  };
+  const shade=shadeByRegion[regionId] || 0;
+  if(shade>=0){
+    return baseColor.map(channel=>channel+(1-channel)*shade);
   }
-  if(['admiration','amusement','approval','caring','excitement','gratitude','joy','love','optimism','pride','relief'].includes(id)){
-    return 'rgb(255,204,74)';
-  }
-  if(['confusion','curiosity','realization','surprise'].includes(id)){
-    return 'rgb(86,255,188)';
-  }
-  return 'rgb(235,240,255)';
+  return baseColor.map(channel=>channel*(1+shade));
+}
+
+function activationColorForResult(result){
+  const emotionSource=(result.sources || []).find(source=>source.type==='emotion');
+  return emotionSource
+    ? emotionRegionShade(emotionColorArray(emotionSource.id),result.id)
+    : (REGION_COLOR[result.id] || [0.6,0.85,1.0]);
+}
+
+function resultColorCss(result){
+  return colorArrayCss(activationColorForResult(result));
+}
+
+function setRegionVisualColor(rec,colorValues){
+  const color=new THREE.Color(colorValues[0],colorValues[1],colorValues[2]);
+  rec.edgeGlows.forEach(glow=>{
+    if(glow) glow.material.color.copy(color);
+  });
+  rec.nervePaths.forEach(path=>{
+    path.line.material.color.copy(color);
+    path.pulses.material.color.copy(color);
+  });
 }
 
 function appendNlpLayer(title,items,colorFor,labelFor){
@@ -1322,10 +1539,13 @@ function setNlpInspectorProcessing(){
   intentInspector.style.setProperty('--intent-color','var(--accent-cyan)');
   nlpState.textContent='Processing';
   nlpPrimary.textContent='Understanding emotion and intent…';
-  nlpMeta.textContent='Running multi-label emotion and semantic intent analysis';
+  if(nlpMeta) nlpMeta.textContent='Running multi-label emotion and semantic intent analysis';
   nlpReason.textContent='Empwave will combine both layers through its region mapping.';
   nlpEvidence.textContent='Waiting for NLP evidence';
   nlpSignals.replaceChildren();
+  emotionReviewBtn.hidden=true;
+  emotionFeedbackState.hidden=true;
+  emotionFeedbackState.textContent='Corrections require consent and human review.';
 }
 
 function setNlpInspectorError(message){
@@ -1333,26 +1553,36 @@ function setNlpInspectorError(message){
   intentInspector.style.setProperty('--intent-color','rgb(255,80,110)');
   nlpState.textContent='Error';
   nlpPrimary.textContent='Analysis unavailable';
-  nlpMeta.textContent='The NLP request did not complete';
+  if(nlpMeta) nlpMeta.textContent='The NLP request did not complete';
   nlpReason.textContent=message;
   nlpEvidence.textContent='No semantic evidence returned';
   nlpSignals.replaceChildren();
+  emotionReviewBtn.hidden=true;
+  emotionFeedbackState.hidden=true;
 }
 
 function renderNlpInspector(analysis){
   const primary=analysis.primary_intent;
   const primaryRegion=REGIONS.find(region=>region.id===primary.region_id);
-  const primaryColor=regionColorCss(primary.region_id);
+  const primaryResult=analysis.regions.find(region=>region.id===primary.region_id);
+  const primaryColor=primaryResult
+    ? resultColorCss(primaryResult)
+    : regionColorCss(primary.region_id);
 
   intentInspector.classList.remove('processing');
   intentInspector.style.setProperty('--intent-color',primaryColor);
   nlpState.textContent='Complete';
   nlpPrimary.textContent=primary.label;
-  nlpMeta.textContent=`${analysis.emotions.length} emotions · ${analysis.intents.length} intents · ${primaryRegion.label} ${Math.round(primary.score*100)}%`;
+  if(nlpMeta) nlpMeta.textContent=`${analysis.emotions.length} emotions · ${analysis.intents.length} intents · ${primaryRegion.label} ${Math.round(primary.score*100)}%`;
   nlpReason.textContent=primary.reason;
   nlpEvidence.textContent=`Evidence · “${primary.evidence}”`;
-  nlpModel.textContent=`MODEL · ${analysis.model.split('/').pop().toUpperCase()}`;
+  if(nlpModel) nlpModel.textContent=`MODEL · ${analysis.model.split('/').pop().toUpperCase()}`;
   nlpSignals.replaceChildren();
+  emotionReviewBtn.hidden=!EMOTION_FEEDBACK_ENABLED;
+  emotionFeedbackState.hidden=!EMOTION_FEEDBACK_ENABLED;
+  if(EMOTION_FEEDBACK_ENABLED){
+    emotionFeedbackState.textContent='Think the emotions are wrong? Submit a self-report for review.';
+  }
 
   appendNlpLayer(
     'Emotions',
@@ -1369,10 +1599,101 @@ function renderNlpInspector(analysis){
   appendNlpLayer(
     'Derived regions',
     analysis.regions,
-    item=>regionColorCss(item.id),
+    item=>resultColorCss(item),
     item=>REGIONS.find(region=>region.id===item.id).label
   );
 }
+
+function formatEmotionLabel(emotion){
+  return emotion.replaceAll('_',' ').replace(/\b\w/g,character=>character.toUpperCase());
+}
+
+function setEmotionReviewOpen(open){
+  emotionReviewModal.classList.toggle('open',open);
+  emotionReviewModal.setAttribute('aria-hidden',String(!open));
+  if(open){
+    emotionConsent.checked=false;
+    emotionReviewMessage.textContent='Submissions stay pending until reviewed.';
+    emotionFeedbackSubmit.disabled=false;
+    emotionReviewText.textContent=`Sentence · “${latestAnalyzedText}”`;
+    emotionChoices.replaceChildren();
+
+    const predicted=new Set(latestAnalysis.emotions.map(emotion=>emotion.id));
+    latestAnalysis.supported_emotions.forEach(emotion=>{
+      const label=document.createElement('label');
+      label.className='emotion-choice';
+      const checkbox=document.createElement('input');
+      checkbox.type='checkbox';
+      checkbox.value=emotion;
+      checkbox.checked=predicted.has(emotion);
+      const text=document.createElement('span');
+      text.textContent=formatEmotionLabel(emotion);
+      checkbox.addEventListener('change',()=>{
+        if(emotion==='neutral' && checkbox.checked){
+          emotionChoices.querySelectorAll('input').forEach(input=>{
+            if(input!==checkbox) input.checked=false;
+          });
+        } else if(checkbox.checked){
+          const neutral=emotionChoices.querySelector('input[value="neutral"]');
+          if(neutral) neutral.checked=false;
+        }
+      });
+      label.append(checkbox,text);
+      emotionChoices.appendChild(label);
+    });
+    emotionReviewClose.focus();
+  }
+}
+
+emotionReviewBtn.addEventListener('click',()=>{
+  if(
+    EMOTION_FEEDBACK_ENABLED
+    && latestAnalysis
+    && latestAnalyzedText
+  ){
+    setEmotionReviewOpen(true);
+  }
+});
+emotionReviewClose.addEventListener('click',()=>setEmotionReviewOpen(false));
+emotionReviewModal.addEventListener('click',event=>{
+  if(event.target===emotionReviewModal) setEmotionReviewOpen(false);
+});
+emotionFeedbackSubmit.addEventListener('click',async()=>{
+  const selected=[...emotionChoices.querySelectorAll('input:checked')]
+    .map(input=>input.value);
+  if(!selected.length){
+    emotionReviewMessage.textContent='Select at least one emotion.';
+    return;
+  }
+  if(!emotionConsent.checked){
+    emotionReviewMessage.textContent='Consent is required before storing feedback.';
+    return;
+  }
+
+  emotionFeedbackSubmit.disabled=true;
+  emotionReviewMessage.textContent='Submitting for review…';
+  try{
+    const response=await fetch('/api/emotion-feedback',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        text:latestAnalyzedText,
+        selected_emotions:selected,
+        consent:true
+      })
+    });
+    const result=await response.json();
+    if(!response.ok || result.status!=='success'){
+      throw new Error(result.message || `Feedback failed (${response.status})`);
+    }
+    emotionReviewMessage.textContent=result.message;
+    emotionFeedbackState.textContent=`Feedback #${result.feedback_id} is pending human review.`;
+    emotionReviewBtn.textContent='Review submitted';
+  } catch(error){
+    emotionReviewMessage.textContent=error.message;
+    emotionFeedbackSubmit.disabled=false;
+  }
+});
 
 async function runSimulation(){
   const text = input.value.trim();
@@ -1388,11 +1709,14 @@ async function runSimulation(){
   setNlpInspectorProcessing();
 
   let analysis;
+  const requestController=new AbortController();
+  const requestTimeout=setTimeout(()=>requestController.abort(),30000);
   try{
     const response=await fetch('/api/process-speech',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({text})
+      body:JSON.stringify({text}),
+      signal:requestController.signal
     });
     analysis=await response.json();
     if(!response.ok || analysis.status!=='success'){
@@ -1400,11 +1724,16 @@ async function runSimulation(){
     }
   } catch(error){
     console.error('Semantic NLP analysis failed:',error);
-    statusLine.textContent=`Unable to analyze this message: ${error.message}`;
+    const message=error.name==='AbortError'
+      ? 'The NLP request timed out. Please try again.'
+      : error.message;
+    statusLine.textContent=`Unable to analyze this message: ${message}`;
     statusLine.classList.remove('live');
-    setNlpInspectorError(error.message);
+    setNlpInspectorError(message);
     btn.disabled=false;
     return;
+  } finally {
+    clearTimeout(requestTimeout);
   }
 
   if(!analysis.primary_intent){
@@ -1414,6 +1743,9 @@ async function runSimulation(){
     btn.disabled=false;
     return;
   }
+  latestAnalysis=analysis;
+  latestAnalyzedText=text;
+  emotionReviewBtn.textContent='Review detected emotions';
 
   const matched=[];
   for(const result of analysis.regions){
@@ -1435,6 +1767,8 @@ async function runSimulation(){
     const rec=markers[r.id];
     rec.activeFrom=0;
     rec.activeUntil=0;
+    rec.activeColor=null;
+    setRegionVisualColor(rec,REGION_COLOR[r.id] || [0.6,0.85,1.0]);
     rec.edgeGlows.forEach(glow=>{
       if(glow) glow.material.opacity=0;
     });
@@ -1443,6 +1777,7 @@ async function runSimulation(){
       path.pulses.material.opacity=0;
     });
     rowEls[r.id].classList.remove('active');
+    rowEls[r.id].style.setProperty('--region-color',regionColorCss(r.id));
     rowEls[r.id].querySelector('i').style.width='6%';
   });
 
@@ -1452,10 +1787,25 @@ async function runSimulation(){
   matched.forEach((m, idx)=>{
     activeIds.add(m.region.id);
     const strength=m.strength;
-    triggerRegion(m.region.id, now, strength, idx*140);
+    const activationColor=activationColorForResult(m);
+    const activationColorCss=colorArrayCss(activationColor);
+    triggerRegion(
+      m.region.id,
+      now,
+      strength,
+      idx*140,
+      activationColor
+    );
 
     const reason=`${m.reason} Semantic evidence: “${m.evidence}”.`;
-    explanations.push({ id:m.region.id, label:m.region.label, fn:m.region.fn, reason, strength });
+    explanations.push({
+      id:m.region.id,
+      label:m.region.label,
+      fn:m.region.fn,
+      reason,
+      strength,
+      color:activationColorCss
+    });
   });
 
   activeCountEl.textContent = activeIds.size + '/10';
@@ -1486,8 +1836,8 @@ async function runSimulation(){
 function renderExplanations(explanations, text){
   if(explanations.length===0){ explainPanel.classList.remove('show'); explainPanel.innerHTML=''; return; }
   explainPanel.innerHTML = explanations.map(e => `
-    <div class="explain-card" style="border-left-color:${regionColorCss(e.id)}">
-      <div class="dot" style="background:${regionColorCss(e.id)}"></div>
+    <div class="explain-card" style="border-left-color:${e.color}">
+      <div class="dot" style="background:${e.color}"></div>
       <div class="body">
         <div class="nm">${escapeHtml(e.label)}</div>
         <div class="fn">${escapeHtml(e.fn)}</div>
@@ -1508,13 +1858,19 @@ function escapeHtml(value){
   })[character]);
 }
 
-function triggerRegion(id, now, strength, delay){
+function triggerRegion(id, now, strength, delay, activationColor){
   const rec = markers[id];
   rec.activeFrom = now + delay;
   rec.activeUntil = rec.activeFrom + 5200;
   rec.strength = strength;
   rec.lastEmit = 0;
+  rec.activeColor=activationColor;
+  setRegionVisualColor(rec,activationColor);
   rowEls[id].classList.add('active');
+  rowEls[id].style.setProperty(
+    '--region-color',
+    colorArrayCss(activationColor)
+  );
   rowEls[id].querySelector('i').style.width = Math.round(strength*100)+'%';
 
   setTimeout(()=>{
@@ -1524,6 +1880,11 @@ function triggerRegion(id, now, strength, delay){
 
 btn.addEventListener('click', runSimulation);
 input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') runSimulation(); });
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape' && emotionReviewModal.classList.contains('open')){
+    setEmotionReviewOpen(false);
+  }
+});
 
 // ============================================================
 // RENDER LOOP
@@ -1559,7 +1920,7 @@ function animate(t){
     if(isActive){
       hasActiveRegion=true;
       const pulse = 0.8 + Math.sin(now*0.0032)*0.2;
-      const regionColor=REGION_COLOR[r.id] || [0.6,0.85,1];
+      const regionColor=rec.activeColor || REGION_COLOR[r.id] || [0.6,0.85,1];
       rowEls[r.id].classList.add('active');
       rowEls[r.id].querySelector('i').style.width=Math.round((rec.strength||0.6)*100)+'%';
       mat.map=markerTexHot;

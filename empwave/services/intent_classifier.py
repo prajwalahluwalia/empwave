@@ -232,6 +232,7 @@ EMOTION_REGION_WEIGHTS = {
     "surprise": {"amygdala": 0.82, "prefrontal": 0.35},
     "neutral": {},
 }
+SUPPORTED_EMOTIONS = tuple(EMOTION_REGION_WEIGHTS)
 
 INTENT_REGION_WEIGHTS = {
     "prefrontal": {"prefrontal": 1.0},
