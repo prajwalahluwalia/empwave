@@ -58,13 +58,15 @@ def _simulation_regions(analysis):
             raise ValueError(
                 f"Unsupported brain region returned: {region['id']}"
             )
-        sources = [
+        all_sources = region.get("sources", ())
+        non_baseline_sources = [
             source
-            for source in region.get("sources", ())
+            for source in all_sources
             if source.get("type") != "baseline"
         ]
-        if not sources and region["id"] == "temporal_l":
+        if not all_sources and region["id"] == "temporal_l":
             continue
+        sources = non_baseline_sources if non_baseline_sources else all_sources
         trigger = next(
             (
                 source.get("evidence")

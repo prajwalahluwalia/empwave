@@ -264,7 +264,7 @@ REGION_ACTIVATION_THRESHOLDS = {
     "cerebellum": 0.42,
     "brainstem": 0.32,
 }
-EMOTION_RUNTIME_MIN_CONFIDENCE = 0.93
+EMOTION_RUNTIME_MIN_CONFIDENCE = 0.65
 
 
 def _split_clauses(text):

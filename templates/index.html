@@ -42,7 +42,7 @@
   .eyebrow{
     position:fixed; top:28px; left:32px; z-index:5;
     font-family:'IBM Plex Mono', monospace;
-    font-size:15px; letter-spacing:.22em; color:#fff;
+    font-size:13.5px; letter-spacing:.22em; color:#fff;
     opacity:.85; text-transform:uppercase;
     display:flex; align-items:center; gap:10px;
   }
@@ -63,7 +63,7 @@
     -webkit-background-clip:text; background-clip:text; color:transparent;
   }
   .title-block p{
-    margin:10px 0 0; font-family:'IBM Plex Mono', monospace; font-size:15.5px;
+    margin:10px 0 0; font-family:'IBM Plex Mono', monospace; font-size:14px;
     color:#fff; opacity:.82; max-width:390px; line-height:1.55; letter-spacing:.01em;
   }
 
@@ -73,13 +73,13 @@
     width:320px; font-family:'IBM Plex Mono', monospace;
   }
   #readout .rh{
-    font-size:15px; letter-spacing:.16em; color:#fff; opacity:.82; text-transform:uppercase;
+    font-size:13.5px; letter-spacing:.16em; color:#fff; opacity:.82; text-transform:uppercase;
     margin-bottom:10px; display:flex; justify-content:space-between;
   }
   #readout .rh span.n{ color:var(--accent-violet); }
   .region-row{
     display:flex; align-items:center; gap:9px; padding:6px 0;
-    font-size:16px; color:#fff; opacity:.68; border-top:1px solid rgba(140,170,255,0.08);
+    font-size:14.5px; color:#fff; opacity:.68; border-top:1px solid rgba(140,170,255,0.08);
     transition:color .3s ease;
   }
   .region-row:first-of-type{ border-top:none; }
@@ -115,7 +115,7 @@
     width:min(760px, 90vw);
   }
   #status-line{
-    font-family:'IBM Plex Mono', monospace; font-size:15.5px; color:#fff; opacity:.78;
+    font-family:'IBM Plex Mono', monospace; font-size:14px; color:#fff; opacity:.78;
     text-align:center; margin-bottom:10px; min-height:14px; letter-spacing:.03em;
     transition:color .3s ease;
   }
@@ -140,8 +140,8 @@
   .explain-card .dot{ width:8px;height:8px;border-radius:50%; margin-top:5px; flex-shrink:0; }
   .explain-card .body{ font-family:'IBM Plex Mono', monospace; }
   .explain-card .nm{ font-size:16px; color:#fff; font-weight:500; }
-  .explain-card .fn{ font-size:14.5px; color:#fff; opacity:.86; margin-top:2px; }
-  .explain-card .why{ font-size:15px; color:#fff; opacity:.76; margin-top:6px; line-height:1.55; }
+  .explain-card .fn{ font-size:13px; color:#fff; opacity:.86; margin-top:2px; }
+  .explain-card .why{ font-size:13.5px; color:#fff; opacity:.76; margin-top:6px; line-height:1.55; }
   .explain-card .why b{ color:var(--ink-hi); font-weight:500; }
 
   .console-panel{
@@ -153,7 +153,7 @@
   }
   .console-panel input{
     flex:1; min-width:0; background:transparent; border:none; outline:none;
-    color:#fff; font-family:'Space Grotesk',sans-serif; font-size:19px;
+    color:#fff; font-family:'Space Grotesk',sans-serif; font-size:17.5px;
     padding:10px 0;
   }
   .console-panel input::placeholder{ color:#fff; opacity:.62; }
@@ -161,7 +161,7 @@
     flex-shrink:0; border:none; cursor:pointer;
     background:linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
     color:#0a0b1f; font-family:'IBM Plex Mono', monospace; font-weight:500;
-    font-size:16px; letter-spacing:.08em; text-transform:uppercase;
+    font-size:14.5px; letter-spacing:.08em; text-transform:uppercase;
     padding:13px 22px; border-radius:11px;
     display:flex; align-items:center; gap:8px;
     transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
@@ -173,12 +173,12 @@
   #simBtn svg{ width:14px; height:14px; }
   .hint{
     text-align:center; margin-top:12px; font-family:'IBM Plex Mono', monospace;
-    font-size:14.5px; color:#fff; letter-spacing:.035em; opacity:.68;
+    font-size:13px; color:#fff; letter-spacing:.035em; opacity:.68;
   }
 
   #legendToggle{
     position:fixed; bottom:26px; left:32px; z-index:5;
-    font-family:'IBM Plex Mono', monospace; font-size:15px; letter-spacing:.08em;
+    font-family:'IBM Plex Mono', monospace; font-size:13.5px; letter-spacing:.08em;
     color:#fff; background:transparent; border:1px solid var(--panel-border);
     padding:9px 12px; border-radius:9px; cursor:pointer; text-transform:uppercase;
     transition:color .2s, border-color .2s;
@@ -236,10 +236,10 @@
   #nlpPrimary{
     margin-top:10px; color:#fff;
     font-family:'Space Grotesk',sans-serif;
-    font-size:21px; font-weight:600; line-height:1.2;
+    font-size:20px; font-weight:600; line-height:1.2;
   }
   #nlpMeta{
-    margin-top:4px; font-size:13.5px; line-height:1.45;
+    margin-top:4px; font-size:12.5px; line-height:1.45;
     color:var(--intent-color);
   }
   #nlpDetails{
@@ -1525,12 +1525,12 @@ function updateBrainHover(e){
   }
 
   hoverRotationTarget.set(
-    hoverPointer.y*0.054,
-    hoverPointer.x*0.078
+    hoverPointer.y*0.081,
+    hoverPointer.x*0.117
   );
   hoverPositionTarget.set(
-    hoverPointer.x*0.03,
-    hoverPointer.y*0.018
+    hoverPointer.x*0.15,
+    hoverPointer.y*0.12
   );
 }
 
@@ -2122,10 +2122,10 @@ function animate(t){
   lastFrameTime = now;
   let hasActiveRegion=false;
 
-  brainHoverGroup.rotation.x+=(hoverRotationTarget.x-brainHoverGroup.rotation.x)*0.0825;
-  brainHoverGroup.rotation.y+=(hoverRotationTarget.y-brainHoverGroup.rotation.y)*0.0825;
-  brainHoverGroup.position.x+=(hoverPositionTarget.x-brainHoverGroup.position.x)*0.0825;
-  brainHoverGroup.position.y+=(hoverPositionTarget.y-brainHoverGroup.position.y)*0.0825;
+  brainHoverGroup.rotation.x+=(hoverRotationTarget.x-brainHoverGroup.rotation.x)*0.12;
+  brainHoverGroup.rotation.y+=(hoverRotationTarget.y-brainHoverGroup.rotation.y)*0.12;
+  brainHoverGroup.position.x+=(hoverPositionTarget.x-brainHoverGroup.position.x)*0.22;
+  brainHoverGroup.position.y+=(hoverPositionTarget.y-brainHoverGroup.position.y)*0.22;
 
   REGIONS.forEach(r=>{
     const rec = markers[r.id];
