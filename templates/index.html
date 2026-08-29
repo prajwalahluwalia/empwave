@@ -16,15 +16,15 @@
     --accent-cyan:#5be9ff;
     --accent-violet:#9a7bff;
     --accent-magenta:#ff6ec7;
-    --ink-hi:#eef1ff;
-    --ink-mid:#9aa3d1;
-    --ink-dim:#5c6294;
+    --ink-hi:#ffffff;
+    --ink-mid:#f2f4ff;
+    --ink-dim:#dfe3f5;
     --panel: rgba(14,16,45,0.72);
     --panel-border: rgba(140,170,255,0.16);
   }
   *{box-sizing:border-box;}
   html,body{
-    margin:0; padding:0; height:100%; width:100%;
+    margin:0; padding:0; height:100%; min-height:100dvh; width:100%;
     background:
       radial-gradient(ellipse 120% 80% at 50% -10%, #23134f 0%, transparent 55%),
       radial-gradient(ellipse 100% 60% at 85% 100%, #0e2a4d 0%, transparent 50%),
@@ -34,7 +34,7 @@
     overflow:hidden;
     -webkit-font-smoothing:antialiased;
   }
-  #stage{ position:fixed; inset:0; }
+  #stage{ position:fixed; inset:0; height:100dvh; }
   canvas{ display:block; touch-action:none; cursor:grab; }
   canvas:active{ cursor:grabbing; }
 
@@ -42,7 +42,7 @@
   .eyebrow{
     position:fixed; top:28px; left:32px; z-index:5;
     font-family:'IBM Plex Mono', monospace;
-    font-size:14px; letter-spacing:.22em; color:#fff;
+    font-size:15px; letter-spacing:.22em; color:#fff;
     opacity:.85; text-transform:uppercase;
     display:flex; align-items:center; gap:10px;
   }
@@ -57,13 +57,13 @@
     position:fixed; top:52px; left:32px; z-index:5; pointer-events:none;
   }
   .title-block h1{
-    margin:0; font-weight:700; font-size:clamp(28px,4vw,44px); line-height:1.02;
+    margin:0; font-weight:700; font-size:clamp(29px,calc(4vw + 1px),45px); line-height:1.02;
     letter-spacing:-0.01em;
     background:linear-gradient(120deg,#ffffff 10%, #b9c3ff 55%, var(--accent-cyan) 100%);
     -webkit-background-clip:text; background-clip:text; color:transparent;
   }
   .title-block p{
-    margin:10px 0 0; font-family:'IBM Plex Mono', monospace; font-size:14.5px;
+    margin:10px 0 0; font-family:'IBM Plex Mono', monospace; font-size:15.5px;
     color:#fff; opacity:.82; max-width:390px; line-height:1.55; letter-spacing:.01em;
   }
 
@@ -73,13 +73,13 @@
     width:320px; font-family:'IBM Plex Mono', monospace;
   }
   #readout .rh{
-    font-size:14px; letter-spacing:.16em; color:#fff; opacity:.82; text-transform:uppercase;
+    font-size:15px; letter-spacing:.16em; color:#fff; opacity:.82; text-transform:uppercase;
     margin-bottom:10px; display:flex; justify-content:space-between;
   }
   #readout .rh span.n{ color:var(--accent-violet); }
   .region-row{
     display:flex; align-items:center; gap:9px; padding:6px 0;
-    font-size:15px; color:#fff; opacity:.68; border-top:1px solid rgba(140,170,255,0.08);
+    font-size:16px; color:#fff; opacity:.68; border-top:1px solid rgba(140,170,255,0.08);
     transition:color .3s ease;
   }
   .region-row:first-of-type{ border-top:none; }
@@ -105,8 +105,8 @@
     backdrop-filter:blur(6px); padding:6px 10px; border-radius:6px;
     white-space:nowrap; box-shadow:0 4px 24px rgba(0,0,0,0.4);
   }
-  .tag .box .nm{ font-size:11px; color:var(--accent-cyan); font-weight:500; letter-spacing:.03em;}
-  .tag .box .fn{ font-size:9.5px; color:var(--ink-mid); margin-top:2px; }
+  .tag .box .nm{ font-size:12px; color:var(--accent-cyan); font-weight:500; letter-spacing:.03em;}
+  .tag .box .fn{ font-size:10.5px; color:var(--ink-mid); margin-top:2px; }
   .tag .stem{ width:1px; height:16px; background:linear-gradient(180deg, rgba(140,200,255,.5), transparent); margin:0 auto; }
 
   /* ---- bottom console ---- */
@@ -115,7 +115,7 @@
     width:min(760px, 90vw);
   }
   #status-line{
-    font-family:'IBM Plex Mono', monospace; font-size:14.5px; color:#fff; opacity:.78;
+    font-family:'IBM Plex Mono', monospace; font-size:15.5px; color:#fff; opacity:.78;
     text-align:center; margin-bottom:10px; min-height:14px; letter-spacing:.03em;
     transition:color .3s ease;
   }
@@ -139,9 +139,9 @@
   }
   .explain-card .dot{ width:8px;height:8px;border-radius:50%; margin-top:5px; flex-shrink:0; }
   .explain-card .body{ font-family:'IBM Plex Mono', monospace; }
-  .explain-card .nm{ font-size:15px; color:#fff; font-weight:500; }
-  .explain-card .fn{ font-size:13.5px; color:#fff; opacity:.86; margin-top:2px; }
-  .explain-card .why{ font-size:14px; color:#fff; opacity:.76; margin-top:6px; line-height:1.55; }
+  .explain-card .nm{ font-size:16px; color:#fff; font-weight:500; }
+  .explain-card .fn{ font-size:14.5px; color:#fff; opacity:.86; margin-top:2px; }
+  .explain-card .why{ font-size:15px; color:#fff; opacity:.76; margin-top:6px; line-height:1.55; }
   .explain-card .why b{ color:var(--ink-hi); font-weight:500; }
 
   .console-panel{
@@ -152,8 +152,8 @@
     box-shadow:0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
   }
   .console-panel input{
-    flex:1; background:transparent; border:none; outline:none;
-    color:#fff; font-family:'Space Grotesk',sans-serif; font-size:18px;
+    flex:1; min-width:0; background:transparent; border:none; outline:none;
+    color:#fff; font-family:'Space Grotesk',sans-serif; font-size:19px;
     padding:10px 0;
   }
   .console-panel input::placeholder{ color:#fff; opacity:.62; }
@@ -161,7 +161,7 @@
     flex-shrink:0; border:none; cursor:pointer;
     background:linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
     color:#0a0b1f; font-family:'IBM Plex Mono', monospace; font-weight:500;
-    font-size:15px; letter-spacing:.08em; text-transform:uppercase;
+    font-size:16px; letter-spacing:.08em; text-transform:uppercase;
     padding:13px 22px; border-radius:11px;
     display:flex; align-items:center; gap:8px;
     transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
@@ -173,12 +173,12 @@
   #simBtn svg{ width:14px; height:14px; }
   .hint{
     text-align:center; margin-top:12px; font-family:'IBM Plex Mono', monospace;
-    font-size:13.5px; color:#fff; letter-spacing:.035em; opacity:.68;
+    font-size:14.5px; color:#fff; letter-spacing:.035em; opacity:.68;
   }
 
   #legendToggle{
     position:fixed; bottom:26px; left:32px; z-index:5;
-    font-family:'IBM Plex Mono', monospace; font-size:14px; letter-spacing:.08em;
+    font-family:'IBM Plex Mono', monospace; font-size:15px; letter-spacing:.08em;
     color:#fff; background:transparent; border:1px solid var(--panel-border);
     padding:9px 12px; border-radius:9px; cursor:pointer; text-transform:uppercase;
     transition:color .2s, border-color .2s;
@@ -189,7 +189,8 @@
     --intent-color:var(--accent-cyan);
     position:fixed; right:32px; bottom:28px; z-index:7;
     width:350px;
-    height:480px;
+    height:auto;
+    max-height:min(480px,calc(100dvh - 56px));
     overflow-y:auto;
     overscroll-behavior:contain;
     padding:15px 16px;
@@ -218,12 +219,12 @@
     gap:12px;
   }
   .intent-inspector-label{
-    font-size:12.5px; letter-spacing:.18em;
+    font-size:13.5px; letter-spacing:.18em;
     color:#fff; opacity:.68; text-transform:uppercase;
   }
   #nlpState{
     display:flex; align-items:center; gap:6px;
-    font-size:11.5px; letter-spacing:.1em;
+    font-size:12.5px; letter-spacing:.1em;
     color:var(--intent-color); text-transform:uppercase;
   }
   #nlpState::before{
@@ -235,21 +236,45 @@
   #nlpPrimary{
     margin-top:10px; color:#fff;
     font-family:'Space Grotesk',sans-serif;
-    font-size:20px; font-weight:600; line-height:1.2;
+    font-size:21px; font-weight:600; line-height:1.2;
   }
   #nlpMeta{
-    margin-top:4px; font-size:12.5px; line-height:1.45;
+    margin-top:4px; font-size:13.5px; line-height:1.45;
     color:var(--intent-color);
   }
+  #nlpDetails{
+    margin-top:10px;
+    border-top:1px solid rgba(140,170,255,.1);
+  }
+  #nlpDetails summary{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px; padding-top:9px;
+    color:#fff; opacity:.66;
+    font-size:11.5px; letter-spacing:.08em;
+    text-transform:uppercase; cursor:pointer;
+    list-style:none;
+  }
+  #nlpDetails summary::-webkit-details-marker{ display:none; }
+  #nlpDetails summary::after{
+    content:'+';
+    color:var(--intent-color);
+    font-size:18px; line-height:1;
+  }
+  #nlpDetails[open] summary::after{ content:'−'; }
+  #nlpDetails summary:hover,
+  #nlpDetails summary:focus-visible{
+    color:var(--intent-color); opacity:1;
+  }
+  .nlp-details-body{ padding-bottom:1px; }
   #nlpReason{
-    margin-top:8px; font-size:12.5px; line-height:1.5;
+    margin-top:8px; font-size:13.5px; line-height:1.5;
     color:#fff; opacity:.7;
   }
   #nlpEvidence{
     margin-top:7px; padding:7px 8px;
     border:1px solid rgba(140,170,255,.1);
     border-radius:8px; background:rgba(140,170,255,.04);
-    color:#fff; opacity:.82; font-size:12.5px; line-height:1.4;
+    color:#fff; opacity:.82; font-size:13.5px; line-height:1.4;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   #nlpSignals{
@@ -260,7 +285,7 @@
     flex:0 0 100%;
     margin-top:3px;
     color:#fff; opacity:.42;
-    font-size:10px; letter-spacing:.13em;
+    font-size:11px; letter-spacing:.13em;
     text-transform:uppercase;
   }
   .nlp-signal{
@@ -268,7 +293,7 @@
     padding:4px 6px; border-radius:6px;
     background:rgba(140,170,255,.05);
     border:1px solid rgba(140,170,255,.1);
-    color:#fff; opacity:.82; font-size:11px;
+    color:#fff; opacity:.82; font-size:12px;
   }
   .nlp-signal::before{
     content:''; width:5px; height:5px; border-radius:50%;
@@ -276,7 +301,7 @@
     box-shadow:0 0 6px var(--signal-color);
   }
   #nlpModel{
-    margin-top:9px; font-size:10.5px; letter-spacing:.06em;
+    margin-top:9px; font-size:11.5px; letter-spacing:.06em;
     color:#fff; opacity:.38;
   }
   #emotionReviewBtn{
@@ -284,15 +309,20 @@
     border:1px solid color-mix(in srgb,var(--intent-color) 42%,transparent);
     border-radius:8px; background:rgba(255,255,255,.035);
     color:#fff; font-family:'IBM Plex Mono',monospace;
-    font-size:11px; letter-spacing:.06em; cursor:pointer;
+    font-size:12px; letter-spacing:.06em; cursor:pointer;
   }
   #emotionReviewBtn:hover{
     background:color-mix(in srgb,var(--intent-color) 12%,transparent);
   }
   #emotionFeedbackState{
     margin-top:7px; color:#fff; opacity:.58;
-    font-size:10px; line-height:1.45;
+    font-size:11px; line-height:1.45;
   }
+  #intentInspector.ready #nlpDetails,
+  #intentInspector.processing #nlpDetails{
+    display:none;
+  }
+  #intentInspector.ready #nlpPrimary{ margin-top:8px; }
 
   #emotionReviewModal{
     position:fixed; inset:0; z-index:35;
@@ -318,22 +348,22 @@
     display:flex; justify-content:space-between; gap:18px;
   }
   .emotion-review-head h2{
-    margin:5px 0 0; font-size:24px;
+    margin:5px 0 0; font-size:25px;
   }
   .emotion-review-copy{
     margin:8px 0 0; max-width:560px;
-    color:#fff; opacity:.7; font-size:13px; line-height:1.5;
+    color:#fff; opacity:.7; font-size:14px; line-height:1.5;
   }
   #emotionReviewClose{
     width:38px; height:38px; flex-shrink:0;
     border:1px solid var(--panel-border); border-radius:9px;
-    background:transparent; color:#fff; cursor:pointer; font-size:20px;
+    background:transparent; color:#fff; cursor:pointer; font-size:21px;
   }
   #emotionReviewText{
     margin-top:16px; padding:10px 12px;
     border:1px solid rgba(140,170,255,.12); border-radius:9px;
     color:#fff; opacity:.86; font-family:'IBM Plex Mono',monospace;
-    font-size:12px; line-height:1.5;
+    font-size:13px; line-height:1.5;
   }
   #emotionChoices{
     display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
@@ -343,7 +373,7 @@
   .emotion-choice span{
     display:block; padding:8px 9px; border-radius:8px;
     border:1px solid rgba(140,170,255,.13);
-    color:#fff; opacity:.66; font-size:11px; text-align:center;
+    color:#fff; opacity:.66; font-size:12px; text-align:center;
     cursor:pointer; transition:.15s ease;
   }
   .emotion-choice input:checked + span{
@@ -354,7 +384,7 @@
   .emotion-consent{
     display:flex; align-items:flex-start; gap:9px;
     margin-top:16px; color:#fff; opacity:.72;
-    font-size:12px; line-height:1.5;
+    font-size:13px; line-height:1.5;
   }
   .emotion-consent input{ margin-top:3px; accent-color:var(--accent-cyan); }
   .emotion-review-actions{
@@ -362,13 +392,13 @@
     gap:14px; margin-top:16px;
   }
   #emotionReviewMessage{
-    color:#fff; opacity:.7; font-size:11px; line-height:1.4;
+    color:#fff; opacity:.7; font-size:12px; line-height:1.4;
   }
   #emotionFeedbackSubmit{
     flex-shrink:0; padding:10px 15px; border:0; border-radius:9px;
     background:linear-gradient(135deg,var(--accent-violet),var(--accent-cyan));
     color:#08091d; font-family:'IBM Plex Mono',monospace;
-    font-size:12px; cursor:pointer;
+    font-size:13px; cursor:pointer;
   }
   #emotionFeedbackSubmit:disabled{ opacity:.55; cursor:wait; }
 
@@ -407,18 +437,18 @@
   }
   .legend-kicker{
     font-family:'IBM Plex Mono',monospace;
-    font-size:12px; letter-spacing:.18em;
+    font-size:13px; letter-spacing:.18em;
     color:var(--accent-cyan); text-transform:uppercase;
   }
   .legend-head h2{
-    margin:8px 0 0; font-size:29px; letter-spacing:-.01em;
+    margin:8px 0 0; font-size:30px; letter-spacing:-.01em;
     background:linear-gradient(110deg,#fff,#b9c3ff 60%,var(--accent-cyan));
     -webkit-background-clip:text; background-clip:text; color:transparent;
   }
   #legendClose{
     width:40px; height:40px; border-radius:10px;
     border:1px solid var(--panel-border); background:rgba(140,170,255,.05);
-    color:var(--ink-mid); cursor:pointer; font-size:20px; line-height:1;
+    color:var(--ink-mid); cursor:pointer; font-size:21px; line-height:1;
     transition:color .2s,border-color .2s,background .2s;
   }
   #legendClose:hover{
@@ -453,25 +483,142 @@
   }
   .legend-name{
     font-family:'IBM Plex Mono',monospace;
-    font-size:16px; color:var(--ink-hi);
+    font-size:17px; color:var(--ink-hi);
   }
   .legend-function{
     margin-top:5px; font-family:'IBM Plex Mono',monospace;
-    font-size:14px; line-height:1.5; color:var(--ink-mid);
+    font-size:15px; line-height:1.5; color:var(--ink-mid);
+  }
+
+  @media (max-width: 1280px){
+    .title-block p{ max-width:330px; }
+    #readout{ width:280px; right:20px; }
+    #intentInspector{
+      right:20px; bottom:20px;
+      width:320px; height:auto;
+      max-height:min(430px,calc(100dvh - 40px));
+    }
+    #explainPanel{ display:none; }
+  }
+
+  @media (max-width: 1024px){
+    .eyebrow{ top:20px; left:22px; font-size:13px; }
+    .title-block{ top:46px; left:22px; }
+    .title-block h1{ font-size:35px; }
+    .title-block p{ max-width:300px; font-size:13.5px; }
+    #readout{ display:none; }
+    #intentInspector{
+      right:18px; bottom:142px;
+      width:310px;
+      height:auto;
+      max-height:min(360px,calc(100dvh - 188px));
+    }
+    #console{
+      left:22px; right:22px; bottom:20px;
+      width:auto; transform:none;
+    }
+    #status-line{ font-size:13.5px; }
+    .hint{ font-size:12.5px; }
   }
 
   @media (max-width: 720px){
-    #intentInspector{ bottom:140px; }
-  }
-  @media (max-width: 720px){
-    #readout{ display:none; }
-    .title-block p{ max-width:220px; }
-    #legendGrid{ grid-template-columns:1fr; }
+    .eyebrow{
+      top:14px; left:14px; right:72px;
+      font-size:11px; letter-spacing:.14em;
+    }
+    .title-block{ top:38px; left:14px; }
+    .title-block h1{ font-size:clamp(27px,calc(8vw + 1px),33px); }
+    .title-block p{
+      max-width:min(330px,calc(100vw - 28px));
+      margin-top:7px; font-size:12px; line-height:1.45;
+    }
+    #legendToggle{
+      top:12px; right:12px; bottom:auto; left:auto;
+      padding:7px 9px; font-size:12px;
+    }
     #intentInspector{
-      left:16px; right:16px; bottom:142px; width:auto;
-      height:min(480px,calc(100vh - 174px));
+      left:12px; right:12px; bottom:142px;
+      width:auto; height:auto;
+      max-height:min(260px,calc(100dvh - 300px));
+      min-height:0;
+      padding:13px 14px;
+    }
+    #nlpPrimary{ font-size:19px; }
+    #nlpMeta,#nlpReason,#nlpEvidence{ font-size:12px; }
+    .intent-inspector-label{ font-size:11.5px; }
+    #nlpState{ font-size:11px; }
+    .nlp-signal{ font-size:11px; }
+    #console{
+      left:12px; right:12px; bottom:max(10px,env(safe-area-inset-bottom));
+    }
+    #status-line{
+      margin-bottom:7px; font-size:12px; line-height:1.4;
+      min-height:0;
+    }
+    .console-panel{
+      gap:7px; border-radius:13px;
+      padding:6px 6px 6px 13px;
+    }
+    .console-panel input{ font-size:17px; padding:8px 0; }
+    #simBtn{
+      padding:11px 13px; border-radius:9px;
+      font-size:13px; letter-spacing:.05em;
+    }
+    .hint{ display:none; }
+    #legendModal{ padding:12px; }
+    .legend-panel{
+      width:calc(100vw - 24px);
+      max-height:calc(100dvh - 24px);
+    }
+    .legend-head{ padding:18px 16px 14px; }
+    .legend-head h2{ font-size:24px; }
+    #legendGrid{
+      grid-template-columns:1fr;
+      padding:14px 16px 18px;
+      max-height:calc(100dvh - 130px);
     }
     #emotionChoices{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  }
+
+  @media (max-width: 420px){
+    .title-block p{ display:none; }
+    #intentInspector{
+      bottom:132px;
+      height:auto;
+      max-height:min(230px,calc(100dvh - 240px));
+    }
+    .console-panel input{ font-size:16px; }
+    #simBtn{ padding:10px 11px; font-size:12px; }
+    #simBtn svg{ width:11px; height:11px; }
+    .emotion-review-panel{ padding:16px; }
+    .emotion-review-head h2{ font-size:21px; }
+    .emotion-review-actions{
+      align-items:stretch; flex-direction:column;
+    }
+    #emotionFeedbackSubmit{ width:100%; }
+  }
+
+  @media (max-height: 700px) and (min-width: 721px){
+    .title-block p{ display:none; }
+    #readout .region-row{ padding:3px 0; }
+    #intentInspector{
+      bottom:118px;
+      height:auto;
+      max-height:min(300px,calc(100dvh - 150px));
+    }
+    #console{ bottom:12px; }
+    .hint{ display:none; }
+  }
+
+  @media (max-height: 500px) and (max-width: 720px){
+    .title-block p{ display:none; }
+    #intentInspector{
+      bottom:108px;
+      height:auto;
+      max-height:150px;
+    }
+    #status-line{ display:none; }
+    #console{ bottom:8px; }
   }
 </style>
 </head>
@@ -494,19 +641,24 @@
 
 <button id="legendToggle">? Legend</button>
 
-<aside id="intentInspector" aria-live="polite">
+<aside id="intentInspector" class="ready" aria-live="polite">
   <div class="intent-inspector-head">
     <div class="intent-inspector-label">EMPWAVE</div>
     <div id="nlpState">Ready</div>
   </div>
   <div id="nlpPrimary">Emotion Analysis</div>
-  <div id="nlpMeta">Submit a sentence to inspect its emotions and intent.</div>
-  <div id="nlpReason">Wait until we get the evidence maps to each region.</div>
-  <div id="nlpEvidence">No evidence clause yet</div>
-  <div id="nlpSignals"></div>
-  <div id="nlpModel">MODEL · EMPWAVE EMOTIONS + SEMANTIC INTENTS</div>
-  <button id="emotionReviewBtn" type="button" hidden>Review detected emotions</button>
-  <div id="emotionFeedbackState" hidden>Corrections require consent and human review.</div>
+  <div id="nlpMeta">Enter a sentence to analyze emotions and intent.</div>
+  <details id="nlpDetails">
+    <summary id="nlpDetailsSummary">View analysis details</summary>
+    <div class="nlp-details-body">
+      <div id="nlpReason">Wait until we get the evidence maps to each region.</div>
+      <div id="nlpEvidence">No evidence clause yet</div>
+      <div id="nlpSignals"></div>
+      <div id="nlpModel">MODEL · EMPWAVE EMOTIONS + SEMANTIC INTENTS</div>
+      <button id="emotionReviewBtn" type="button" hidden>Review detected emotions</button>
+      <div id="emotionFeedbackState" hidden>Corrections require consent and human review.</div>
+    </div>
+  </details>
 </aside>
 
 <div id="emotionReviewModal" role="dialog" aria-modal="true" aria-labelledby="emotionReviewTitle" aria-hidden="true">
@@ -601,11 +753,14 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 stage.appendChild(renderer.domElement);
 
-window.addEventListener('resize', ()=>{
+function resizeViewport(){
   camera.aspect = window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-});
+  updateResponsiveBrainLayout();
+}
+window.addEventListener('resize',resizeViewport);
+window.addEventListener('orientationchange',resizeViewport);
 
 // subtle ambient particle field (depth cue)
 (function starfield(){
@@ -1176,8 +1331,46 @@ fetch('/static/models/brain.obj')
 
 brainGroup.rotation.y = -1.22;
 brainGroup.rotation.x = 0.05;
-brainGroup.position.y = 0.45; // lift the model so it clears the bottom console/explanation panel
-brainGroup.scale.setScalar(1.416);
+
+function updateResponsiveBrainLayout(){
+  const width=window.innerWidth;
+  const height=window.innerHeight;
+  let scale=1.416;
+  let cameraZ=4.7;
+  let positionX=0;
+  let positionY=0.45;
+
+  if(width<=420){
+    scale=0.95;
+    cameraZ=5.15;
+    positionY=0.82;
+  } else if(width<=720){
+    scale=1.04;
+    cameraZ=5.0;
+    positionY=0.76;
+  } else if(width<=1024){
+    scale=1.18;
+    cameraZ=5.05;
+    positionX=-0.25;
+    positionY=0.52;
+  } else if(width<=1280){
+    scale=1.30;
+    cameraZ=4.9;
+    positionX=-0.12;
+    positionY=0.48;
+  }
+
+  if(height<700){
+    scale*=0.88;
+    cameraZ+=0.25;
+    positionY+=0.1;
+  }
+
+  camera.position.set(0,0.32,cameraZ);
+  brainGroup.position.set(positionX,positionY,0);
+  brainGroup.scale.setScalar(scale);
+}
+updateResponsiveBrainLayout();
 
 // ============================================================
 // GLOW TEXTURE
@@ -1413,6 +1606,8 @@ const intentInspector = document.getElementById('intentInspector');
 const nlpState = document.getElementById('nlpState');
 const nlpPrimary = document.getElementById('nlpPrimary');
 const nlpMeta = document.getElementById('nlpMeta');
+const nlpDetails = document.getElementById('nlpDetails');
+const nlpDetailsSummary = document.getElementById('nlpDetailsSummary');
 const nlpReason = document.getElementById('nlpReason');
 const nlpEvidence = document.getElementById('nlpEvidence');
 const nlpSignals = document.getElementById('nlpSignals');
@@ -1535,7 +1730,10 @@ function appendNlpLayer(title,items,colorFor,labelFor){
 }
 
 function setNlpInspectorProcessing(){
+  intentInspector.classList.remove('ready','complete');
   intentInspector.classList.add('processing');
+  nlpDetails.open=false;
+  nlpDetailsSummary.textContent='View analysis details';
   intentInspector.style.setProperty('--intent-color','var(--accent-cyan)');
   nlpState.textContent='Processing';
   nlpPrimary.textContent='Understanding emotion and intent…';
@@ -1549,8 +1747,10 @@ function setNlpInspectorProcessing(){
 }
 
 function setNlpInspectorError(message){
-  intentInspector.classList.remove('processing');
+  intentInspector.classList.remove('ready','processing','complete');
   intentInspector.style.setProperty('--intent-color','rgb(255,80,110)');
+  nlpDetails.open=true;
+  nlpDetailsSummary.textContent='Error details';
   nlpState.textContent='Error';
   nlpPrimary.textContent='Analysis unavailable';
   if(nlpMeta) nlpMeta.textContent='The NLP request did not complete';
@@ -1569,8 +1769,11 @@ function renderNlpInspector(analysis){
     ? resultColorCss(primaryResult)
     : regionColorCss(primary.region_id);
 
-  intentInspector.classList.remove('processing');
+  intentInspector.classList.remove('ready','processing');
+  intentInspector.classList.add('complete');
   intentInspector.style.setProperty('--intent-color',primaryColor);
+  nlpDetails.open=false;
+  nlpDetailsSummary.textContent='View analysis details';
   nlpState.textContent='Complete';
   nlpPrimary.textContent=primary.label;
   if(nlpMeta) nlpMeta.textContent=`${analysis.emotions.length} emotions · ${analysis.intents.length} intents · ${primaryRegion.label} ${Math.round(primary.score*100)}%`;
