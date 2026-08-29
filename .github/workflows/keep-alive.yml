@@ -1,0 +1,15 @@
+name: Keep Empwave Alive
+
+on:
+  schedule:
+    - cron: '*/0.5 * * * *'  # Every 30 seconds
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: |
+          curl -f https://empwave.onrender.com/health || exit 1
+        timeout-minutes: 1
