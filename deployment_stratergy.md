@@ -3,12 +3,17 @@
 ## Current deployment
 
 - The Flask application exposes `POST /simulate` and `GET /health`.
-- Gunicorn runs one preloaded worker with four threads so the semantic model is
-  initialized once and is not duplicated across worker processes.
+- Gunicorn runs one worker with one thread so the semantic model is initialized
+  once without worker duplication or avoidable thread overhead.
 - `ALLOWED_ORIGIN` must contain the deployed frontend origin, for example
   `https://example.com`. Requests carrying another origin are rejected.
-- The Docker image downloads `sentence-transformers/all-MiniLM-L6-v2` during
-  the build and verifies that
+- The Docker and Render builds convert
+  `sentence-transformers/all-MiniLM-L6-v2` to a local INT8 ONNX encoder. The
+  production process uses ONNX Runtime and does not import PyTorch, avoiding
+  the full-precision startup memory spike.
+- The scikit-learn emotion heads are exported to a compact NumPy artifact at
+  build time, preventing scikit-learn and SciPy from consuming runtime memory.
+- The build verifies that
   `models/trained/empwave_classifier.joblib` exists.
 - The browser remains responsible for speech synthesis. `/simulate` returns
   `spoken_text`, which can be passed to `window.speechSynthesis`.

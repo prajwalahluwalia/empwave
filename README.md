@@ -3,7 +3,7 @@ title: Empwave
 emoji: 🧠
 colorFrom: purple
 colorTo: blue
-sdk: docker
+sdk: gradio
 app_port: 7860
 pinned: false
 ---
@@ -77,8 +77,11 @@ those signals into illustrative brain-region scores and always includes
 auditory decoding for spoken input.
 
 The sentence encoder loads once when the Flask process starts and is then
-reused by every request. Docker builds download it into the image ahead of
-startup. No API key or hosted inference service is required.
+reused by every request. Deployment builds export an INT8 ONNX graph so the
+production process does not load PyTorch. The trained scikit-learn emotion heads
+are also exported as plain NumPy coefficients so SciPy and scikit-learn are
+not loaded by the production process. No API key or hosted inference service
+is required.
 
 ## Train an Empwave classifier
 
@@ -111,40 +114,65 @@ python scripts/review_feedback.py approve 12 --note "Verified correction"
 python scripts/review_feedback.py reject 13 --note "Spam submission"
 ```
 
-## Deploy on Render
-
-The repository includes `render.yaml`. Deploy it as a Render Blueprint, or use
-these settings for a manual Web Service:
-
-```text
-Build Command:
-pip install -r requirements.txt && python scripts/cache_model.py
-
-Start Command:
-gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 120 app:app
-```
-
-Leave **Root Directory** empty. Use one worker because the loaded NLP model uses
-roughly 344MB locally and Render's free instance provides 512MB. The trained
-artifact at `models/trained/empwave_classifier.joblib` must be committed and
-pushed with the application.
-
 ## Deploy on Hugging Face Spaces
 
-This repository includes a Docker configuration for a Hugging Face Docker
-Space. Set `ALLOWED_ORIGIN` to the exact frontend origin before deployment.
+### Quick Setup (3 steps):
 
-```bash
-docker build -t empwave .
-docker run --rm -p 7860:7860 \
-  -e ALLOWED_ORIGIN=http://localhost:7860 \
-  empwave
+1. **Create a Hugging Face account** (free at [huggingface.co](https://huggingface.co))
+
+2. **Create a new Space:**
+   - Go to [huggingface.co/new-space](https://huggingface.co/new-space)
+   - Name: `empwave`
+   - License: Choose one (MIT recommended)
+   - Space SDK: **Gradio** (not Docker)
+   - Click "Create Space"
+
+3. **Connect your GitHub repo:**
+   - In your new Space, go to **Settings → Repository** 
+   - Enable "Sync with a Git repository"
+   - Connect this GitHub repo: `prajwalahluwalia/empwave`
+   - Branch: `main`
+   - Click "Save"
+
+**That's it!** HF Spaces will automatically:
+- ✅ Detect `requirements.txt` and install dependencies
+- ✅ Run `python scripts/cache_model.py` during build (configure in app.py)
+- ✅ Start your Flask app on port 7860
+- ✅ Deploy live at `hf.co/spaces/your-username/empwave`
+
+### Optional: Add a startup script
+
+Create `app_hf.py` in your root (HF Spaces looks for this):
+
+```python
+import os
+from empwave import create_app
+
+app = create_app()
+
+if __name__ == "__main__":
+    app.run(
+        host="0.0.0.0",
+        port=7860,
+        debug=False
+    )
 ```
 
-The container pre-downloads the MiniLM encoder at build time and starts
-Gunicorn with one preloaded worker and four threads. The trained `.joblib`
-artifact is covered by `.gitattributes`; see `deployment_stratergy.md` for the
-one-time Git LFS setup and the deferred backend-TTS plan.
+Or keep your current `app.py` — it already works with HF Spaces.
+
+### Environment Variables
+
+If needed, set them in Space **Settings → Variables**:
+- `FLASK_ENV`: `production`
+- `ALLOWED_ORIGIN`: Your Space URL
+- `EMPWAVE_ENABLE_EMOTION_FEEDBACK`: `0` (or `1` to enable)
+
+### Notes
+
+- The trained `.joblib` artifact is covered by `.gitattributes`
+- See `deployment_stratergy.md` for Git LFS setup
+- Free tier has 2GB RAM (plenty for your model)
+- Spins down after inactivity (normal for free tier)
 
 ### Keyboard Shortcuts
 

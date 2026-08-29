@@ -1,19 +1,24 @@
 """Empwave semantic classification for listener brain responses."""
 
+import json
 import logging
+import os
 import re
 from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
-from joblib import load
-from sentence_transformers import SentenceTransformer
+
+from empwave.services.text_encoder import TextEncoder
 
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 TRAINED_MODEL_PATH = (
     PROJECT_ROOT / "models" / "trained" / "empwave_classifier.joblib"
+)
+RUNTIME_MODEL_PATH = (
+    PROJECT_ROOT / "models" / "runtime" / "empwave_classifier.npz"
 )
 LOGGER = logging.getLogger(__name__)
 
@@ -280,7 +285,7 @@ def _split_clauses(text):
 class SemanticIntentClassifier:
     def __init__(self, model_name=MODEL_NAME):
         self.model_name = model_name
-        self.model = SentenceTransformer(model_name)
+        self.model = TextEncoder(model_name)
         self.prototype_embeddings = {
             region_id: self.model.encode(
                 config["prototypes"],
@@ -439,7 +444,7 @@ class LayeredNlpClassifier:
 
     def __init__(self, artifact_path=TRAINED_MODEL_PATH):
         self.artifact_path = Path(artifact_path)
-        artifact = load(self.artifact_path)
+        artifact = self._load_artifact(self.artifact_path)
         metadata = artifact.get("metadata", {})
         classifiers = artifact.get("emotion_classifiers")
         labels = metadata.get("labels")
@@ -502,6 +507,39 @@ class LayeredNlpClassifier:
         self.model_name = "empwave-emotions-v2+semantic-intents"
 
     @staticmethod
+    def _load_artifact(artifact_path):
+        if artifact_path.suffix != ".npz":
+            from joblib import load
+
+            return load(artifact_path)
+
+        with np.load(artifact_path, allow_pickle=False) as data:
+            metadata = json.loads(str(data["metadata_json"]))
+            labels = data["labels"].tolist()
+            model_types = data["model_types"].tolist()
+            coefficients = data["coefficients"]
+            intercepts = data["intercepts"]
+            constants = data["constants"]
+
+        classifiers = {}
+        for index, label in enumerate(labels):
+            if model_types[index] == "constant":
+                classifiers[label] = {
+                    "type": "constant",
+                    "probability": float(constants[index]),
+                }
+            else:
+                classifiers[label] = {
+                    "type": "linear",
+                    "coefficient": coefficients[index],
+                    "intercept": float(intercepts[index]),
+                }
+        return {
+            "metadata": metadata,
+            "emotion_classifiers": classifiers,
+        }
+
+    @staticmethod
     def _predict_probabilities(model, embeddings):
         if model.get("type") == "constant":
             return np.full(
@@ -509,6 +547,19 @@ class LayeredNlpClassifier:
                 float(model["probability"]),
                 dtype=np.float32,
             )
+        if model.get("type") == "linear":
+            logits = (
+                embeddings @ model["coefficient"]
+                + model["intercept"]
+            )
+            probabilities = np.empty_like(logits, dtype=np.float64)
+            positive = logits >= 0
+            probabilities[positive] = 1.0 / (
+                1.0 + np.exp(-logits[positive])
+            )
+            exp_logits = np.exp(logits[~positive])
+            probabilities[~positive] = exp_logits / (1.0 + exp_logits)
+            return probabilities
         return model["estimator"].predict_proba(embeddings)[:, 1]
 
     def _detect_emotions(self, text):
@@ -829,7 +880,15 @@ class LayeredNlpClassifier:
 
 @lru_cache(maxsize=1)
 def get_classifier():
-    if TRAINED_MODEL_PATH.is_file():
+    configured_path = os.getenv("EMPWAVE_CLASSIFIER_PATH")
+    runtime_path = (
+        Path(configured_path)
+        if configured_path
+        else RUNTIME_MODEL_PATH
+    )
+    if runtime_path.is_file():
+        classifier = LayeredNlpClassifier(runtime_path)
+    elif TRAINED_MODEL_PATH.is_file():
         classifier = LayeredNlpClassifier(TRAINED_MODEL_PATH)
     else:
         LOGGER.warning(
