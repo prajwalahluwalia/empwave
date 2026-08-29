@@ -6,6 +6,7 @@ from contextlib import closing
 from pathlib import Path
 
 from app import app
+from empwave import create_app
 from empwave.services.feedback_store import FeedbackStore
 from empwave.services.intent_classifier import get_classifier
 
@@ -190,6 +191,120 @@ class ProcessSpeechApiTests(unittest.TestCase):
     def test_process_speech_rejects_empty_text(self):
         response = self.client.post("/api/process-speech", json={"text": " "})
         self.assertEqual(response.status_code, 400)
+
+    def test_simulate_returns_emotional_regions_with_triggers(self):
+        text = "I am terrified of the dark"
+        response = self.client.post("/simulate", json={"text": text})
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertFalse(payload["fallback"])
+        self.assertTrue(payload["spoken_text"])
+        self.assertIn("analysis", payload)
+        self.assertIn(
+            "amygdala",
+            {region["id"] for region in payload["regions"]},
+        )
+        allowed_ids = {
+            "prefrontal",
+            "broca",
+            "motor",
+            "parietal",
+            "occipital",
+            "temporal_l",
+            "temporal_r",
+            "amygdala",
+            "cerebellum",
+            "brainstem",
+        }
+        for region in payload["regions"]:
+            self.assertEqual(
+                set(region),
+                {"id", "strength", "trigger"},
+            )
+            self.assertIn(region["id"], allowed_ids)
+            self.assertGreaterEqual(region["strength"], 0.0)
+            self.assertLessEqual(region["strength"], 1.0)
+            self.assertIn(region["trigger"], text)
+
+    def test_simulate_returns_movement_region(self):
+        response = self.client.post(
+            "/simulate",
+            json={"text": "I balance on a tightrope"},
+        )
+        payload = response.get_json()
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(payload["fallback"])
+        self.assertEqual(
+            [region["id"] for region in payload["regions"]],
+            ["cerebellum"],
+        )
+
+    def test_simulate_returns_fallback_for_factual_text(self):
+        response = self.client.post(
+            "/simulate",
+            json={"text": "The food is on the table"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["regions"], [])
+        self.assertTrue(response.get_json()["fallback"])
+
+    def test_simulate_returns_fallback_for_ambiguous_text(self):
+        response = self.client.post(
+            "/simulate",
+            json={"text": "This is a project"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["regions"], [])
+        self.assertTrue(response.get_json()["fallback"])
+
+    def test_health_reports_preloaded_model(self):
+        response = self.client.get("/health")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.get_json(),
+            {
+                "model": "empwave-emotions-v2+semantic-intents",
+                "model_loaded": True,
+                "status": "ok",
+            },
+        )
+        self.assertIs(app.extensions["empwave_classifier"], get_classifier())
+
+    def test_simulate_cors_allows_configured_origin(self):
+        allowed_origin = "https://frontend.example"
+        cors_app = create_app(
+            {
+                "TESTING": True,
+                "ALLOWED_ORIGIN": allowed_origin,
+            }
+        )
+        response = cors_app.test_client().post(
+            "/simulate",
+            json={"text": "I balance on a tightrope"},
+            headers={"Origin": allowed_origin},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.headers.get("Access-Control-Allow-Origin"),
+            allowed_origin,
+        )
+
+    def test_simulate_cors_rejects_other_origins(self):
+        cors_app = create_app(
+            {
+                "TESTING": True,
+                "ALLOWED_ORIGIN": "https://frontend.example",
+            }
+        )
+        response = cors_app.test_client().post(
+            "/simulate",
+            json={"text": "I balance on a tightrope"},
+            headers={"Origin": "https://attacker.example"},
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertIsNone(
+            response.headers.get("Access-Control-Allow-Origin")
+        )
 
     def test_emotion_feedback_requires_consent(self):
         response = self.client.post(

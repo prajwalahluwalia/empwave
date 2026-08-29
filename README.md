@@ -1,3 +1,13 @@
+---
+title: Empwave
+emoji: 🧠
+colorFrom: purple
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Brain Reaction Prototype - Setup & Running Guide
 
 A minimalist, immersive web-based interactive prototype that simulates a human brain reacting to typed text in real-time. Built with Python Flask, Three.js, and the Web Speech API.
@@ -66,8 +76,9 @@ movement, memory, and language intents. A transparent weighted mapping combines
 those signals into illustrative brain-region scores and always includes
 auditory decoding for spoken input.
 
-The model is downloaded from Hugging Face on the first analysis and then read
-from the local cache. No API key or hosted inference service is required.
+The sentence encoder loads once when the Flask process starts and is then
+reused by every request. Docker builds download it into the image ahead of
+startup. No API key or hosted inference service is required.
 
 ## Train an Empwave classifier
 
@@ -117,6 +128,23 @@ Leave **Root Directory** empty. Use one worker because the loaded NLP model uses
 roughly 344MB locally and Render's free instance provides 512MB. The trained
 artifact at `models/trained/empwave_classifier.joblib` must be committed and
 pushed with the application.
+
+## Deploy on Hugging Face Spaces
+
+This repository includes a Docker configuration for a Hugging Face Docker
+Space. Set `ALLOWED_ORIGIN` to the exact frontend origin before deployment.
+
+```bash
+docker build -t empwave .
+docker run --rm -p 7860:7860 \
+  -e ALLOWED_ORIGIN=http://localhost:7860 \
+  empwave
+```
+
+The container pre-downloads the MiniLM encoder at build time and starts
+Gunicorn with one preloaded worker and four threads. The trained `.joblib`
+artifact is covered by `.gitattributes`; see `deployment_stratergy.md` for the
+one-time Git LFS setup and the deferred backend-TTS plan.
 
 ### Keyboard Shortcuts
 
@@ -244,21 +272,36 @@ if __name__ == '__main__':
 
 ## 📚 API Reference
 
-### POST `/api/analyze-text`
+### POST `/simulate`
 
 **Request:**
 ```json
 {
-    "text": "Your text here"
+  "text": "I balance on a tightrope"
 }
 ```
 
 **Response:**
 ```json
 {
-    "regions": ["auditory", "prefrontal", "motor"]
+  "regions": [
+    {
+      "id": "cerebellum",
+      "strength": 0.715,
+      "trigger": "I balance on a tightrope"
+    }
+  ],
+  "fallback": false,
+  "spoken_text": "A human-readable explanation for browser speech synthesis.",
+  "analysis": {
+    "model": "empwave-emotions-v2+semantic-intents"
+  }
 }
 ```
+
+If no non-baseline region matches confidently, `regions` is empty and
+`fallback` is `true`. `POST /api/process-speech` remains available for
+backward compatibility.
 
 ## 🎯 Demo Prompts
 
@@ -292,14 +335,15 @@ This project is open source and available for educational and creative purposes.
 - Sound visualization synced to audio
 - User preference saving
 - Network multiplayer viewing
-- Advanced NLP analysis instead of keyword matching
+- Optional server-generated TTS audio
 
 ## 💡 Notes
 
 - The text-to-speech voices vary by browser and operating system
 - Particle effects are GPU-accelerated for smooth performance
 - The brain's rotation is purely aesthetic and continuous
-- All processing happens client-side (frontend)
+- Semantic analysis runs in the Flask backend; Three.js rendering and speech
+  synthesis run in the browser
 
 ---
 

@@ -1912,19 +1912,29 @@ async function runSimulation(){
   setNlpInspectorProcessing();
 
   let analysis;
+  let simulation;
   const requestController=new AbortController();
   const requestTimeout=setTimeout(()=>requestController.abort(),30000);
   try{
-    const response=await fetch('/api/process-speech',{
+    const response=await fetch('/simulate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({text}),
       signal:requestController.signal
     });
-    analysis=await response.json();
-    if(!response.ok || analysis.status!=='success'){
-      throw new Error(analysis.message || `NLP request failed (${response.status})`);
+    simulation=await response.json();
+    if(!response.ok || !simulation.analysis){
+      throw new Error(simulation.message || `NLP request failed (${response.status})`);
     }
+    analysis=simulation.analysis;
+    const detailedRegions=new Map(
+      analysis.regions.map(region=>[region.id,region])
+    );
+    analysis.regions=simulation.regions.map(region=>({
+      ...detailedRegions.get(region.id),
+      strength:region.strength,
+      evidence:region.trigger
+    }));
   } catch(error){
     console.error('Semantic NLP analysis failed:',error);
     const message=error.name==='AbortError'
@@ -2012,7 +2022,9 @@ async function runSimulation(){
   });
 
   activeCountEl.textContent = activeIds.size + '/10';
-  statusLine.textContent = `Simulating: "${text}" → ${matched.map(m=>m.region.label).join(', ')}`;
+  statusLine.textContent = simulation.fallback
+    ? `No confident brain-region match for: "${text}"`
+    : `Simulating: "${text}" → ${matched.map(m=>m.region.label).join(', ')}`;
   statusLine.classList.add('live');
   renderNlpInspector(analysis);
   btn.disabled=false;
@@ -2029,9 +2041,9 @@ async function runSimulation(){
   window.lastActivation = {
     inputText: text,
     model:analysis.model,
-    baselineOnly:analysis.baseline_only,
+    baselineOnly:simulation.fallback,
     regions: explanations,
-    spokenSummary: explanations.map(e => `${e.label}: ${e.reason}`).join(' ')
+    spokenSummary:simulation.spoken_text
   };
   window.dispatchEvent(new CustomEvent('brain-simulation', { detail: window.lastActivation }));
 }

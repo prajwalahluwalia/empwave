@@ -1,0 +1,9 @@
+.git
+.empenv
+__pycache__
+*.py[cod]
+data/raw
+data/processed
+data/feedback
+.pytest_cache
+.DS_Store

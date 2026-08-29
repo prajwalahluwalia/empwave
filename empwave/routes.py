@@ -4,12 +4,96 @@ from flask import Blueprint, current_app, jsonify, render_template, request
 
 from empwave.services.feedback_store import get_feedback_store
 from empwave.services.intent_classifier import (
+    REGION_CONFIG,
     SUPPORTED_EMOTIONS,
     get_classifier,
 )
 
 
 web = Blueprint("web", __name__)
+SUPPORTED_REGION_IDS = frozenset(REGION_CONFIG)
+
+
+def _request_text():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return None, (
+            jsonify(
+                status="error",
+                message="Request body must be a JSON object.",
+            ),
+            400,
+        )
+
+    text = data.get("text")
+    if not isinstance(text, str) or not text.strip():
+        return None, (
+            jsonify(
+                status="error",
+                message="A non-empty text value is required.",
+            ),
+            400,
+        )
+
+    text = text.strip()
+    if len(text) > 1000:
+        return None, (
+            jsonify(
+                status="error",
+                message="Text must be 1000 characters or fewer.",
+            ),
+            400,
+        )
+    return text, None
+
+
+def _classifier():
+    return current_app.extensions["empwave_classifier"]
+
+
+def _simulation_regions(analysis):
+    regions = []
+    for region in analysis["regions"]:
+        if region["id"] not in SUPPORTED_REGION_IDS:
+            raise ValueError(
+                f"Unsupported brain region returned: {region['id']}"
+            )
+        sources = [
+            source
+            for source in region.get("sources", ())
+            if source.get("type") != "baseline"
+        ]
+        if not sources and region["id"] == "temporal_l":
+            continue
+        trigger = next(
+            (
+                source.get("evidence")
+                for source in sources
+                if source.get("evidence")
+            ),
+            region.get("evidence"),
+        )
+        regions.append(
+            {
+                "id": region["id"],
+                "strength": float(region["strength"]),
+                "trigger": str(trigger or ""),
+            }
+        )
+    return regions
+
+
+def _spoken_summary(regions):
+    if not regions:
+        return "No brain region matched the sentence confidently."
+    descriptions = [
+        (
+            f"{REGION_CONFIG[region['id']]['reason']} "
+            f"Trigger: {region['trigger']}."
+        )
+        for region in regions
+    ]
+    return " ".join(descriptions)
 
 
 @web.get("/")
@@ -30,31 +114,47 @@ def emotions():
     )
 
 
-@web.post("/api/process-speech")
-def process_speech():
-    data = request.get_json(silent=True)
-    if not isinstance(data, dict):
-        return jsonify(
-            status="error",
-            message="Request body must be a JSON object.",
-        ), 400
+@web.get("/health")
+def health():
+    classifier = _classifier()
+    return jsonify(
+        status="ok",
+        model=classifier.model_name,
+        model_loaded=True,
+    )
 
-    text = data.get("text")
-    if not isinstance(text, str) or not text.strip():
-        return jsonify(
-            status="error",
-            message="A non-empty text value is required.",
-        ), 400
 
-    text = text.strip()
-    if len(text) > 1000:
-        return jsonify(
-            status="error",
-            message="Text must be 1000 characters or fewer.",
-        ), 400
+@web.post("/simulate")
+def simulate():
+    text, error_response = _request_text()
+    if error_response:
+        return error_response
 
     try:
-        analysis = get_classifier().classify(text)
+        analysis = _classifier().classify(text)
+        regions = _simulation_regions(analysis)
+    except Exception:
+        current_app.logger.exception("Semantic simulation failed")
+        return jsonify(
+            message="The local NLP model could not analyze this text.",
+        ), 503
+
+    return jsonify(
+        regions=regions,
+        fallback=not regions,
+        spoken_text=_spoken_summary(regions),
+        analysis=analysis,
+    )
+
+
+@web.post("/api/process-speech")
+def process_speech():
+    text, error_response = _request_text()
+    if error_response:
+        return error_response
+
+    try:
+        analysis = _classifier().classify(text)
     except Exception:
         current_app.logger.exception("Semantic NLP classification failed")
         return jsonify(
@@ -126,7 +226,7 @@ def emotion_feedback():
         ), 400
 
     try:
-        analysis = get_classifier().classify(text)
+        analysis = _classifier().classify(text)
         result = get_feedback_store(
             current_app.config["FEEDBACK_DB_PATH"]
         ).submit(

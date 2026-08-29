@@ -638,6 +638,7 @@ class LayeredNlpClassifier:
                 "id": source["id"],
                 "label": source["label"],
                 "score": source["score"],
+                "evidence": source.get("evidence"),
                 "weight": weight,
                 "contribution": contribution,
             }
@@ -829,9 +830,15 @@ class LayeredNlpClassifier:
 @lru_cache(maxsize=1)
 def get_classifier():
     if TRAINED_MODEL_PATH.is_file():
-        return LayeredNlpClassifier(TRAINED_MODEL_PATH)
-    LOGGER.warning(
-        "Trained Empwave artifact not found at %s; using semantic classifier.",
-        TRAINED_MODEL_PATH,
+        classifier = LayeredNlpClassifier(TRAINED_MODEL_PATH)
+    else:
+        LOGGER.warning(
+            "Trained Empwave artifact not found at %s; using semantic classifier.",
+            TRAINED_MODEL_PATH,
+        )
+        classifier = SemanticIntentClassifier()
+    LOGGER.info(
+        "Empwave semantic model loaded once for this process: %s",
+        classifier.model_name,
     )
-    return SemanticIntentClassifier()
+    return classifier
