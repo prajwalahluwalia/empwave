@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: empwave
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python scripts/cache_model.py
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 1 --timeout 120 --access-logfile - --error-logfile - app:app
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.7
+      - key: TOKENIZERS_PARALLELISM
+        value: "false"
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: MKL_NUM_THREADS
+        value: "1"
+      - key: EMPWAVE_ENCODER_PATH
+        value: /opt/render/project/src/models/runtime/all-MiniLM-L6-v2-onnx
+      - key: EMPWAVE_CLASSIFIER_PATH
+        value: /opt/render/project/src/models/runtime/empwave_classifier.npz
+
+  - type: background
+    name: empwave-keepalive
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python scripts/keep_alive.py
+    envVars:
+      - key: APP_URL
+        value: https://empwave.onrender.com

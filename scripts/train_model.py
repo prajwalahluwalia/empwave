@@ -469,6 +469,23 @@ def main():
     print(f"Saved model: {artifact_path}")
     print(f"Saved metrics: {metrics_path}")
 
+    # Auto-optimize the model for deployment
+    print("\n🚀 Optimizing model for deployment...")
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["python", "scripts/optimize_model.py"],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            print(result.stdout)
+        else:
+            print(f"Optimization warning: {result.stderr}")
+    except Exception as e:
+        print(f"Optimization skipped: {e}")
+
 
 if __name__ == "__main__":
     try:

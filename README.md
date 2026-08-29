@@ -274,6 +274,62 @@ your_region_key: {
 
 Modify the `color` property in the `brainRegions` object (hex RGB values).
 
+## 🚀 Deploy on Render
+
+### Why Render?
+- **Free tier** - 512MB RAM (fits our optimized models ✅)
+- **Git auto-deploy** - Push to GitHub, auto-builds
+- **Keep-alive service** - Background worker prevents 50-second spindown
+
+### Quick Setup
+
+1. **Create Render account** (free at [render.com](https://render.com))
+
+2. **Deploy via Blueprint:**
+   - Go to [dashboard.render.com](https://dashboard.render.com)
+   - Click "New +" → "Blueprint"
+   - Select your "empwave" GitHub repo
+   - Render auto-reads `render.yaml` and deploys both services
+
+3. **Update keep-alive URL:**
+   - After deployment, copy your app's Render URL (e.g., `https://empwave-abc123.onrender.com`)
+   - Edit `render.yaml` → Background service → `APP_URL` environment variable
+   - Paste your actual Render URL
+   - Push to GitHub to trigger redeploy
+
+### How It Works
+
+The `render.yaml` deploys two services:
+
+**Web Service (Main App):**
+- Runs your Flask app with optimized models
+- Loads encoder + classifier at startup
+- Serves `/health` endpoint every 10 minutes
+
+**Background Service (Keep-Alive):**
+- Runs `scripts/keep_alive.py` independently
+- Pings `/health` every 10 minutes
+- Prevents free instance from spinning down
+- Free tier includes 1 background worker ✅
+
+### Manual Alternative
+
+If not using Blueprint, create two services manually:
+
+**Web Service:**
+```
+Build: pip install -r requirements.txt && python scripts/cache_model.py
+Start: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 1 --timeout 120 app:app
+Health Check: /health
+```
+
+**Background Service:**
+```
+Build: pip install -r requirements.txt
+Start: python scripts/keep_alive.py
+Environment: APP_URL=https://your-render-url.onrender.com
+```
+
 ## 🐛 Troubleshooting
 
 ### "Flask not found" error
