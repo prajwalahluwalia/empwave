@@ -57,20 +57,21 @@
     position:fixed; top:52px; left:32px; z-index:5; pointer-events:none;
   }
   .title-block h1{
-    margin:0; font-weight:700; font-size:clamp(29px,calc(4vw + 1px),45px); line-height:1.02;
+    margin:0; font-weight:700; font-size:clamp(22px,calc(3vw + 1px),32px); line-height:1.02;
     letter-spacing:-0.01em;
     background:linear-gradient(120deg,#ffffff 10%, #b9c3ff 55%, var(--accent-cyan) 100%);
     -webkit-background-clip:text; background-clip:text; color:transparent;
   }
   .title-block p{
-    margin:10px 0 0; font-family:'IBM Plex Mono', monospace; font-size:14px;
+    margin:10px 0 0; font-family:'IBM Plex Mono', monospace; font-size:12px;
     color:#fff; opacity:.82; max-width:390px; line-height:1.55; letter-spacing:.01em;
   }
 
   /* ---- region readout, top right ---- */
   #readout{
     position:fixed; top:28px; right:32px; z-index:5;
-    width:320px; font-family:'IBM Plex Mono', monospace;
+    width:280px; font-family:'IBM Plex Mono', monospace;
+    pointer-events:none;
   }
   #readout .rh{
     font-size:13.5px; letter-spacing:.16em; color:#fff; opacity:.82; text-transform:uppercase;
@@ -79,7 +80,7 @@
   #readout .rh span.n{ color:var(--accent-violet); }
   .region-row{
     display:flex; align-items:center; gap:9px; padding:6px 0;
-    font-size:14.5px; color:#fff; opacity:.68; border-top:1px solid rgba(140,170,255,0.08);
+    font-size:13.5px; color:#fff; opacity:.68; border-top:1px solid rgba(140,170,255,0.08);
     transition:color .3s ease;
   }
   .region-row:first-of-type{ border-top:none; }
@@ -115,14 +116,14 @@
     width:min(760px, 90vw);
   }
   #status-line{
-    font-family:'IBM Plex Mono', monospace; font-size:14px; color:#fff; opacity:.78;
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:#fff; opacity:.78;
     text-align:center; margin-bottom:10px; min-height:14px; letter-spacing:.03em;
     transition:color .3s ease;
   }
   #status-line.live{ color:#fff; opacity:1; }
 
   #explainPanel{
-    position:fixed; right:32px; top:350px; width:320px;
+    position:fixed; right:32px; top:280px; width:300px;
     max-height:0; overflow:hidden; opacity:0;
     transition:max-height .4s ease, opacity .35s ease;
   }
@@ -153,10 +154,10 @@
   }
   .console-panel input{
     flex:1; min-width:0; background:transparent; border:none; outline:none;
-    color:#fff; font-family:'Space Grotesk',sans-serif; font-size:17.5px;
+    color:#fff; font-family:'Space Grotesk',sans-serif; font-size:15px;
     padding:10px 0;
   }
-  .console-panel input::placeholder{ color:#fff; opacity:.62; }
+  .console-panel input::placeholder{ color:#fff; opacity:.62; font-size:14px; }
   #simBtn{
     flex-shrink:0; border:none; cursor:pointer;
     background:linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
@@ -173,7 +174,7 @@
   #simBtn svg{ width:14px; height:14px; }
   .hint{
     text-align:center; margin-top:12px; font-family:'IBM Plex Mono', monospace;
-    font-size:13px; color:#fff; letter-spacing:.035em; opacity:.68;
+    font-size:11px; color:#fff; letter-spacing:.035em; opacity:.68;
   }
 
   #legendToggle{
@@ -187,10 +188,10 @@
 
   #intentInspector{
     --intent-color:var(--accent-cyan);
-    position:fixed; right:32px; bottom:28px; z-index:7;
-    width:350px;
+    position:fixed; right:32px; bottom:90px; z-index:7;
+    width:300px;
     height:auto;
-    max-height:min(480px,calc(100dvh - 56px));
+    max-height:min(380px,calc(100dvh - 140px));
     overflow-y:auto;
     overscroll-behavior:contain;
     padding:15px 16px;
@@ -236,10 +237,10 @@
   #nlpPrimary{
     margin-top:10px; color:#fff;
     font-family:'Space Grotesk',sans-serif;
-    font-size:20px; font-weight:600; line-height:1.2;
+    font-size:17px; font-weight:600; line-height:1.2;
   }
   #nlpMeta{
-    margin-top:4px; font-size:12.5px; line-height:1.45;
+    margin-top:4px; font-size:11px; line-height:1.45;
     color:var(--intent-color);
   }
   #nlpDetails{
@@ -1335,13 +1336,13 @@ brainGroup.rotation.x = 0.05;
 function updateResponsiveBrainLayout(){
   const width=window.innerWidth;
   const height=window.innerHeight;
-  let scale=1.416;
+  let scale=1.57;
   let cameraZ=4.7;
   let positionX=0;
   let positionY=0.45;
 
   if(width<=420){
-    scale=0.95;
+    scale=1;
     cameraZ=5.15;
     positionY=0.82;
   } else if(width<=720){
@@ -1349,12 +1350,12 @@ function updateResponsiveBrainLayout(){
     cameraZ=5.0;
     positionY=0.76;
   } else if(width<=1024){
-    scale=1.18;
+    scale=1.28;
     cameraZ=5.05;
     positionX=-0.25;
     positionY=0.52;
   } else if(width<=1280){
-    scale=1.30;
+    scale=1.33;
     cameraZ=4.9;
     positionX=-0.12;
     positionY=0.48;
