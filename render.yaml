@@ -28,4 +28,4 @@ services:
     startCommand: python scripts/keep_alive.py
     envVars:
       - key: APP_URL
-        value: https://empwave.onrender.com/
+        value: http://localhost:10000
